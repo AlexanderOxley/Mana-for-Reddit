@@ -10,9 +10,25 @@
 		79B45C482F8A829900A0B26A /* Mana for Reddit.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Mana for Reddit.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		79B45C9B2F8A8ABE00A0B26A /* Exceptions for "Mana for Reddit" folder in "Mana for Reddit" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Views/Examples,
+			);
+			target = 79B45C472F8A829900A0B26A /* Mana for Reddit */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		79B45C4A2F8A829900A0B26A /* Mana for Reddit */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				79B45C9B2F8A8ABE00A0B26A /* Exceptions for "Mana for Reddit" folder in "Mana for Reddit" target */,
+			);
+			explicitFolders = (
+				Views/Examples,
+			);
 			path = "Mana for Reddit";
 			sourceTree = "<group>";
 		};
