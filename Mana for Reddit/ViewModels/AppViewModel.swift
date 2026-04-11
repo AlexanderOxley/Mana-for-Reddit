@@ -10,12 +10,12 @@ import Combine
 
 @MainActor
 final class AppViewModel: ObservableObject {
-    @Published var selectedFeed: SidebarItem? = .frontPage {
-        didSet {
-            selectedPost = nil
-        }
-    }
+    @Published var selectedFeed: SidebarItem? = .frontPage
     @Published var selectedPost: Post?
+    @Published var selectedPostSort: PostSort = .best
+    @Published var selectedPostTimeRange: TimeRange = .today
+    @Published var selectedCommentSort: CommentSort = .best
+    @Published var selectedCommentTimeRange: TimeRange = .today
 
     @Published var posts: [Post] = []
     @Published var isLoadingPosts = false
@@ -32,6 +32,8 @@ final class AppViewModel: ObservableObject {
     private var postsAfter: String?
     private var loadedPermalink: String?
     private var commentsAfter: String?
+    private var loadedCommentSort: CommentSort?
+    private var loadedCommentTimeRange: TimeRange?
 
     func loadFrontPage() async {
         postsAfter = nil
@@ -40,7 +42,11 @@ final class AppViewModel: ObservableObject {
         isLoadingPosts = true
         postsErrorMessage = nil
         do {
-            let page = try await RedditService.fetchFrontPagePage(after: nil)
+            let page = try await RedditService.fetchFrontPagePage(
+                sort: selectedPostSort,
+                timeRange: selectedPostTimeRange,
+                after: nil
+            )
             posts = page.posts
             postsAfter = page.after
             hasMorePosts = page.after != nil
@@ -60,7 +66,11 @@ final class AppViewModel: ObservableObject {
 
         isLoadingMorePosts = true
         do {
-            let page = try await RedditService.fetchFrontPagePage(after: after)
+            let page = try await RedditService.fetchFrontPagePage(
+                sort: selectedPostSort,
+                timeRange: selectedPostTimeRange,
+                after: after
+            )
             let existingIDs = Set(posts.map(\.id))
             let newPosts = page.posts.filter { !existingIDs.contains($0.id) }
             posts.append(contentsOf: newPosts)
@@ -72,16 +82,29 @@ final class AppViewModel: ObservableObject {
         isLoadingMorePosts = false
     }
 
-    func loadComments(for post: Post) async {
-        if post.permalink == loadedPermalink, !comments.isEmpty { return }
+    func loadComments(for post: Post, force: Bool = false) async {
+        if !force,
+           post.permalink == loadedPermalink,
+           loadedCommentSort == selectedCommentSort,
+              loadedCommentTimeRange == selectedCommentTimeRange,
+           !comments.isEmpty {
+            return
+        }
         loadedPermalink = post.permalink
+        loadedCommentSort = selectedCommentSort
+          loadedCommentTimeRange = selectedCommentTimeRange
         commentsAfter = nil
         hasMoreComments = true
         isLoadingComments = true
         commentsErrorMessage = nil
         comments = []
         do {
-            let page = try await RedditService.fetchCommentsPage(permalink: post.permalink, after: nil)
+            let page = try await RedditService.fetchCommentsPage(
+                permalink: post.permalink,
+                sort: selectedCommentSort,
+                timeRange: selectedCommentTimeRange,
+                after: nil
+            )
             comments = flattenComments(page.comments)
             commentsAfter = page.after
             hasMoreComments = page.after != nil
@@ -95,6 +118,8 @@ final class AppViewModel: ObservableObject {
     func loadMoreComments(for post: Post) async {
         guard post.permalink == loadedPermalink else { return }
         guard hasMoreComments, !isLoadingComments, !isLoadingMoreComments else { return }
+        guard loadedCommentSort == selectedCommentSort else { return }
+        guard loadedCommentTimeRange == selectedCommentTimeRange else { return }
         guard let after = commentsAfter else {
             hasMoreComments = false
             return
@@ -102,7 +127,12 @@ final class AppViewModel: ObservableObject {
 
         isLoadingMoreComments = true
         do {
-            let page = try await RedditService.fetchCommentsPage(permalink: post.permalink, after: after)
+            let page = try await RedditService.fetchCommentsPage(
+                permalink: post.permalink,
+                sort: selectedCommentSort,
+                timeRange: selectedCommentTimeRange,
+                after: after
+            )
             let existingIDs = Set(comments.map(\.id))
             let flattenedNewComments = flattenComments(page.comments)
             let newComments = flattenedNewComments.filter { !existingIDs.contains($0.id) }

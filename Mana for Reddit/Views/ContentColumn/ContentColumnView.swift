@@ -29,7 +29,8 @@ struct ContentColumnView: View {
                             .tag(post)
                             .onAppear {
                                 if post.id == viewModel.posts.last?.id {
-                                    Task {
+                                    Task { @MainActor in
+                                        await Task.yield()
                                         await viewModel.loadMoreFrontPage()
                                     }
                                 }
@@ -51,6 +52,29 @@ struct ContentColumnView: View {
             }
         }
         .navigationTitle(selectedFeed.rawValue)
+        .safeAreaInset(edge: .top) {
+            SortHeaderView(
+                title: "Posts",
+                options: PostSort.allCases,
+                label: { $0.title },
+                selection: $viewModel.selectedPostSort,
+                showTimeRange: viewModel.selectedPostSort.supportsTimeRange,
+                timeRange: $viewModel.selectedPostTimeRange
+            )
+        }
+        .onChange(of: viewModel.selectedPostSort) { _, _ in
+            Task { @MainActor in
+                await Task.yield()
+                await viewModel.loadFrontPage()
+            }
+        }
+        .onChange(of: viewModel.selectedPostTimeRange) { _, _ in
+            guard viewModel.selectedPostSort.supportsTimeRange else { return }
+            Task { @MainActor in
+                await Task.yield()
+                await viewModel.loadFrontPage()
+            }
+        }
         .task {
             guard viewModel.posts.isEmpty else { return }
             await viewModel.loadFrontPage()

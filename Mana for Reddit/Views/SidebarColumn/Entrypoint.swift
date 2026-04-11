@@ -35,6 +35,12 @@ struct Entrypoint: View {
             }
         }
         .environmentObject(viewModel)
+        .onChange(of: viewModel.selectedFeed) { _, _ in
+            Task { @MainActor in
+                await Task.yield()
+                viewModel.selectedPost = nil
+            }
+        }
     }
 }
 

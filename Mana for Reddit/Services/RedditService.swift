@@ -34,14 +34,17 @@ enum RedditServiceError: LocalizedError {
 struct RedditService {
     private static let userAgent = "ios:com.mana.reddit:v1.0 (by /u/mana-app)"
 
-    static func fetchFrontPage(limit: Int = 25) async throws -> [Post] {
-        let page = try await fetchFrontPagePage(after: nil, limit: limit)
+    static func fetchFrontPage(sort: PostSort = .best, timeRange: TimeRange = .today, limit: Int = 25) async throws -> [Post] {
+        let page = try await fetchFrontPagePage(sort: sort, timeRange: timeRange, after: nil, limit: limit)
         return page.posts
     }
 
-    static func fetchFrontPagePage(after: String?, limit: Int = 25) async throws -> PostPage {
-        var components = URLComponents(string: "https://www.reddit.com/.json")
+    static func fetchFrontPagePage(sort: PostSort = .best, timeRange: TimeRange = .today, after: String?, limit: Int = 25) async throws -> PostPage {
+        var components = URLComponents(string: "https://www.reddit.com\(sort.endpointPath)")
         var queryItems = [URLQueryItem(name: "limit", value: "\(limit)")]
+        if sort.supportsTimeRange {
+            queryItems.append(URLQueryItem(name: "t", value: timeRange.apiValue))
+        }
         if let after {
             queryItems.append(URLQueryItem(name: "after", value: after))
         }
@@ -68,12 +71,12 @@ struct RedditService {
         return PostPage(posts: posts, after: listing.data.after)
     }
 
-    static func fetchComments(permalink: String, limit: Int = 200) async throws -> [Comment] {
-        let page = try await fetchCommentsPage(permalink: permalink, after: nil, limit: limit)
+    static func fetchComments(permalink: String, sort: CommentSort = .best, timeRange: TimeRange = .today, limit: Int = 200) async throws -> [Comment] {
+        let page = try await fetchCommentsPage(permalink: permalink, sort: sort, timeRange: timeRange, after: nil, limit: limit)
         return page.comments
     }
 
-    static func fetchCommentsPage(permalink: String, after: String?, limit: Int = 200) async throws -> CommentPage {
+    static func fetchCommentsPage(permalink: String, sort: CommentSort = .best, timeRange: TimeRange = .today, after: String?, limit: Int = 200) async throws -> CommentPage {
         // permalink is like "/r/swift/comments/abc123/title/" — append .json
         let path = permalink.hasSuffix("/") ? permalink : permalink + "/"
 
@@ -81,8 +84,12 @@ struct RedditService {
         var queryItems = [
             URLQueryItem(name: "limit", value: "\(limit)"),
             URLQueryItem(name: "depth", value: "10"),
-            URLQueryItem(name: "raw_json", value: "1")
+            URLQueryItem(name: "raw_json", value: "1"),
+            URLQueryItem(name: "sort", value: sort.apiValue)
         ]
+        if sort.supportsTimeRange {
+            queryItems.append(URLQueryItem(name: "t", value: timeRange.apiValue))
+        }
         if let after {
             queryItems.append(URLQueryItem(name: "after", value: after))
         }
