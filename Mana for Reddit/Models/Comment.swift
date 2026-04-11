@@ -56,6 +56,7 @@ struct CommentListingWrapper: Decodable {
 
 struct CommentListingData: Decodable {
     let children: [CommentChild]
+    let after: String?
 }
 
 struct CommentChild: Decodable {

@@ -49,6 +49,21 @@ struct DetailColumnView: View {
                 } else {
                     ForEach(viewModel.comments) { comment in
                         CommentRowView(comment: comment)
+                            .onAppear {
+                                if comment.id == viewModel.comments.last?.id {
+                                    Task {
+                                        await viewModel.loadMoreComments(for: post)
+                                    }
+                                }
+                            }
+                    }
+
+                    if viewModel.isLoadingMoreComments {
+                        HStack {
+                            Spacer()
+                            ProgressView("Loading more…")
+                            Spacer()
+                        }
                     }
                 }
             }

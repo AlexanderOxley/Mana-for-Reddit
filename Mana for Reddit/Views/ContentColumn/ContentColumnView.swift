@@ -23,9 +23,26 @@ struct ContentColumnView: View {
                     description: Text(error)
                 )
             } else {
-                List(viewModel.posts, selection: $viewModel.selectedPost) { post in
-                    PostRowView(post: post)
-                        .tag(post)
+                List(selection: $viewModel.selectedPost) {
+                    ForEach(viewModel.posts) { post in
+                        PostRowView(post: post)
+                            .tag(post)
+                            .onAppear {
+                                if post.id == viewModel.posts.last?.id {
+                                    Task {
+                                        await viewModel.loadMoreFrontPage()
+                                    }
+                                }
+                            }
+                    }
+
+                    if viewModel.isLoadingMorePosts {
+                        HStack {
+                            Spacer()
+                            ProgressView("Loading more…")
+                            Spacer()
+                        }
+                    }
                 }
                 .listStyle(.plain)
                 .refreshable {
