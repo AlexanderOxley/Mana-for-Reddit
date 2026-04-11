@@ -13,19 +13,21 @@ struct PostRowView: View {
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
       if let thumbnail = post.thumbnail,
-        thumbnail.hasPrefix("http"),
-        let url = URL(string: thumbnail)
+        thumbnail.hasPrefix("http")
       {
-        AsyncImage(url: url) { image in
-          image
-            .resizable()
-            .scaledToFill()
-        } placeholder: {
-          RoundedRectangle(cornerRadius: 8)
-            .fill(Color.secondary.opacity(0.15))
+        let normalizedThumbnail = thumbnail.replacingOccurrences(of: "&amp;", with: "&")
+        if let url = URL(string: normalizedThumbnail) {
+          AsyncImage(url: url) { image in
+            image
+              .resizable()
+              .scaledToFill()
+          } placeholder: {
+            RoundedRectangle(cornerRadius: 8)
+              .fill(Color.secondary.opacity(0.15))
+          }
+          .frame(width: 70, height: 70)
+          .clipShape(RoundedRectangle(cornerRadius: 8))
         }
-        .frame(width: 70, height: 70)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
       }
 
       VStack(alignment: .leading, spacing: 5) {
