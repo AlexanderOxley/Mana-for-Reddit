@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct Mana_for_RedditApp: App {
+    @StateObject private var frontPageViewModel = FrontPageViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            FrontPageView(viewModel: frontPageViewModel)
         }
     }
 }
