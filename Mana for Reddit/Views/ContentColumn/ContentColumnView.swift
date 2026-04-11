@@ -8,88 +8,136 @@
 import SwiftUI
 
 struct ContentColumnView: View {
-    let selectedFeed: SidebarItem
-    @EnvironmentObject private var viewModel: AppViewModel
+  let selectedFeed: Source
+  @EnvironmentObject private var viewModel: ContentColumnViewModel
+  @EnvironmentObject private var detailViewModel: DetailColumnViewModel
+  @State private var selectedPost: Post?
 
-    var body: some View {
-        Group {
-            if viewModel.isLoadingPosts && viewModel.posts.isEmpty {
-                ProgressView("Loading…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let error = viewModel.postsErrorMessage, viewModel.posts.isEmpty {
-                ContentUnavailableView(
-                    "Could not load posts",
-                    systemImage: "exclamationmark.triangle",
-                    description: Text(error)
-                )
-            } else {
-                List(selection: $viewModel.selectedPost) {
-                    ForEach(viewModel.posts) { post in
-                        PostRowView(post: post)
-                            .tag(post)
-                            .onAppear {
-                                if post.id == viewModel.posts.last?.id {
-                                    Task { @MainActor in
-                                        await Task.yield()
-                                        await viewModel.loadMoreFrontPage()
-                                    }
-                                }
-                            }
-                    }
+  var body: some View {
+    Group {
+      if viewModel.isLoading && viewModel.posts.isEmpty {
+        ProgressView("Loading…")
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+      } else if let error = viewModel.errorMessage, viewModel.posts.isEmpty {
+        ContentUnavailableView(
+          "Could not load posts",
+          systemImage: "exclamationmark.triangle",
+          description: Text(error)
+        )
+      } else {
+        List(selection: $selectedPost) {
+          ForEach(viewModel.posts) { post in
+            PostRowView(post: post)
+              .tag(post)
+              .onAppear {
+                if post.id == viewModel.posts.last?.id {
+                  Task { @MainActor in
+                    await Task.yield()
+                    await viewModel.load()
+                  }
+                }
+              }
+          }
 
-                    if viewModel.isLoadingMorePosts {
-                        HStack {
-                            Spacer()
-                            ProgressView("Loading more…")
-                            Spacer()
-                        }
-                    }
-                }
-                .listStyle(.plain)
-                .refreshable {
-                    await viewModel.loadFrontPage()
-                }
+          if viewModel.isLoadingMore {
+            HStack {
+              Spacer()
+              ProgressView("Loading more…")
+              Spacer()
             }
+          }
         }
-        .navigationTitle(selectedFeed.rawValue)
-        .safeAreaInset(edge: .top) {
-            SortHeaderView(
-                title: "Posts",
-                options: PostSort.allCases,
-                label: { $0.title },
-                selection: $viewModel.selectedPostSort,
-                showTimeRange: viewModel.selectedPostSort.supportsTimeRange,
-                timeRange: $viewModel.selectedPostTimeRange
-            )
+        .listStyle(.plain)
+        .refreshable {
+          await viewModel.load(refresh: true)
         }
-        .onChange(of: viewModel.selectedPostSort) { _, _ in
-            Task { @MainActor in
-                await Task.yield()
-                await viewModel.loadFrontPage()
-            }
-        }
-        .onChange(of: viewModel.selectedPostTimeRange) { _, _ in
-            guard viewModel.selectedPostSort.supportsTimeRange else { return }
-            Task { @MainActor in
-                await Task.yield()
-                await viewModel.loadFrontPage()
-            }
-        }
-        .task {
-            guard viewModel.posts.isEmpty else { return }
-            await viewModel.loadFrontPage()
-        }
+      }
     }
+    .navigationTitle(selectedFeed.title)
+    .toolbar {
+      ToolbarItemGroup(placement: .automatic) {
+        Menu {
+          ForEach(PostSort.allCases, id: \.self) { option in
+            Button {
+              viewModel.sort = option
+            } label: {
+              if option == viewModel.sort {
+                Label(option.title, systemImage: "checkmark")
+              } else {
+                Text(option.title)
+              }
+            }
+          }
+        } label: {
+          Text("Sort: \(viewModel.sort.title)")
+        }
+
+        Menu {
+          ForEach(TimeRange.allCases, id: \.self) { range in
+            Button {
+              viewModel.timeRange = range
+            } label: {
+              if range == viewModel.timeRange {
+                Label(range.title, systemImage: "checkmark")
+              } else {
+                Text(range.title)
+              }
+            }
+          }
+        } label: {
+          Text("Time: \(viewModel.timeRange.title)")
+        }
+        .disabled(!viewModel.sort.supportsTimeRange)
+      }
+    }
+    .onChange(of: viewModel.sort) { _, _ in
+      Task { @MainActor in
+        await Task.yield()
+        await viewModel.load(refresh: true)
+      }
+    }
+    .onChange(of: viewModel.timeRange) { _, _ in
+      guard viewModel.sort.supportsTimeRange else { return }
+      Task { @MainActor in
+        await Task.yield()
+        await viewModel.load(refresh: true)
+      }
+    }
+    .onChange(of: selectedPost) { _, post in
+      Task { @MainActor in
+        await Task.yield()
+        detailViewModel.setPost(post)
+      }
+    }
+    .onAppear {
+      selectedPost = detailViewModel.post
+    }
+    .task {
+      guard viewModel.posts.isEmpty else { return }
+      await viewModel.load(refresh: true)
+    }
+  }
 }
 
 #Preview {
-    let vm = AppViewModel()
+  let contentVM: ContentColumnViewModel = {
+    let vm = ContentColumnViewModel(source: .frontPage)
     vm.posts = [
-        Post(id: "1", title: "Swift concurrency deep dive", author: "swifter", subreddit: "swift", score: 1024, numComments: 55, url: "https://example.com", thumbnail: nil, permalink: "/r/swift/1"),
-        Post(id: "2", title: "I built a Reddit client in SwiftUI", author: "alexo", subreddit: "iOSProgramming", score: 512, numComments: 33, url: "https://example.com", thumbnail: nil, permalink: "/r/iOSProgramming/2"),
+      Post(
+        id: "1", title: "Swift concurrency deep dive", author: "swifter", subreddit: "swift",
+        score: 1024, numComments: 55, url: "https://example.com", thumbnail: nil,
+        permalink: "/r/swift/1"),
+      Post(
+        id: "2", title: "I built a Reddit client in SwiftUI", author: "alexo",
+        subreddit: "iOSProgramming", score: 512, numComments: 33, url: "https://example.com",
+        thumbnail: nil, permalink: "/r/iOSProgramming/2"),
     ]
-    return NavigationStack {
-        ContentColumnView(selectedFeed: .frontPage)
-    }
-    .environmentObject(vm)
+    return vm
+  }()
+  let detailVM = DetailColumnViewModel()
+  NavigationStack {
+    ContentColumnView(selectedFeed: .frontPage)
+  }
+  .environmentObject(contentVM)
+  .environmentObject(detailVM)
 }

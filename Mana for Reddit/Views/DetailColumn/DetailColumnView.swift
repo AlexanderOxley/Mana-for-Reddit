@@ -8,24 +8,26 @@
 import SwiftUI
 
 struct DetailColumnView: View {
-    let post: Post
+  let item: Post
 
-    var body: some View {
-        CommentsView(post: post)
-    }
+  var body: some View {
+    CommentsView(item: item)
+  }
 }
 
 #Preview {
-    DetailColumnView(post: Post(
-        id: "1",
-        title: "Swift concurrency deep dive — actors, tasks, and async/await explained",
-        author: "swifter99",
-        subreddit: "swift",
-        score: 2048,
-        numComments: 87,
-        url: "https://example.com",
-        thumbnail: nil,
-        permalink: "/r/swift/comments/1"
-    ))
-    .environmentObject(AppViewModel())
+  let vm = DetailColumnViewModel()
+  let samplePost = Post(
+    id: "1",
+    title: "Swift concurrency deep dive — actors, tasks, and async/await explained",
+    author: "swifter99",
+    subreddit: "swift",
+    score: 2048,
+    numComments: 87,
+    url: "https://example.com",
+    thumbnail: nil,
+    permalink: "/r/swift/comments/1"
+  )
+  DetailColumnView(item: samplePost)
+    .environmentObject(vm)
 }

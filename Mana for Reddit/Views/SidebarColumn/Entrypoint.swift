@@ -8,42 +8,45 @@
 import SwiftUI
 
 struct Entrypoint: View {
-    @StateObject private var viewModel = AppViewModel()
+  @StateObject private var sidebarViewModel = SidebarColumnViewModel()
+  @StateObject private var contentViewModel = ContentColumnViewModel(source: .frontPage)
+  @StateObject private var detailViewModel = DetailColumnViewModel()
 
-    var body: some View {
-        NavigationSplitView {
-            SidebarColumnView()
-        } content: {
-            if let selectedFeed = viewModel.selectedFeed {
-                ContentColumnView(selectedFeed: selectedFeed)
-            } else {
-                ContentUnavailableView(
-                    "Select a feed",
-                    systemImage: "sidebar.left",
-                    description: Text("Choose a source in the sidebar.")
-                )
-            }
-        } detail: {
-            if let selectedPost = viewModel.selectedPost {
-                DetailColumnView(post: selectedPost)
-            } else {
-                ContentUnavailableView(
-                    "Select a post",
-                    systemImage: "text.bubble",
-                    description: Text("Choose a post to read comments.")
-                )
-            }
-        }
-        .environmentObject(viewModel)
-        .onChange(of: viewModel.selectedFeed) { _, _ in
-            Task { @MainActor in
-                await Task.yield()
-                viewModel.selectedPost = nil
-            }
-        }
+  var body: some View {
+    NavigationSplitView {
+      SidebarColumnView { source in
+        sidebarViewModel.select(source)
+        detailViewModel.setPost(nil)
+        guard let source else { return }
+        contentViewModel.setSource(source)
+      }
+    } content: {
+      if let selectedFeed = sidebarViewModel.selectedItem {
+        ContentColumnView(selectedFeed: selectedFeed)
+      } else {
+        ContentUnavailableView(
+          "Select a feed",
+          systemImage: "sidebar.left",
+          description: Text("Choose a source in the sidebar.")
+        )
+      }
+    } detail: {
+      if let detailItem = detailViewModel.post {
+        DetailColumnView(item: detailItem)
+      } else {
+        ContentUnavailableView(
+          "Select a post",
+          systemImage: "text.bubble",
+          description: Text("Choose a post to read comments.")
+        )
+      }
     }
+    .environmentObject(sidebarViewModel)
+    .environmentObject(contentViewModel)
+    .environmentObject(detailViewModel)
+  }
 }
 
 #Preview {
-    Entrypoint()
+  Entrypoint()
 }
