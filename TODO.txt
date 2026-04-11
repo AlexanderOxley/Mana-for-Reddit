@@ -1,5 +1,7 @@
-TODO: Expand Reddit coding keys and models
+TODO: 
 
+
+1. Expand Reddit coding keys and models
 Posts (PostCodingKeys / Post model)
 - ups ("ups")
 - over_18 ("over_18")
@@ -25,3 +27,8 @@ Comments (RedditCommentCodingKeys / Comment model)
 - controversiality ("controversiality")
 - parent_id ("parent_id")
 - link_id ("link_id")
+
+
+2. giphy gifs in comments
+
+3. links in inapp browser?

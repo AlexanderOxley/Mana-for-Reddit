@@ -21,4 +21,9 @@ enum PostCodingKeys: String, CodingKey {
   case selfText = "selftext"
   case numComments = "num_comments"
   case createdUTC = "created_utc"
+  case postHint = "post_hint"
+  case isVideo = "is_video"
+  case media = "media"
+  case galleryData = "gallery_data"
+  case mediaMetadata = "media_metadata"
 }
