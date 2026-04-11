@@ -8,28 +8,29 @@
 import SwiftUI
 
 struct SidebarColumnView: View {
-  @EnvironmentObject private var viewModel: SidebarColumnViewModel
-  let onSelect: (Source?) -> Void
-
-  var body: some View {
-    List(
-      viewModel.items,
-      selection: Binding(
-        get: { viewModel.selectedItem },
-        set: { onSelect($0) }
-      )
-    ) { item in
-      Label(item.title, systemImage: item.icon)
-        .tag(item)
+    @EnvironmentObject private var viewModel: SidebarColumnViewModel
+    
+    let onSelect: (Source?) -> Void
+    
+    var body: some View {
+        List(
+            viewModel.items,
+            selection: Binding(
+                get: { viewModel.selectedItem },
+                set: { onSelect($0) }
+            )
+        ) { item in
+            Label(item.title, systemImage: item.icon)
+                .tag(item)
+        }
+        .navigationTitle("Mana")
     }
-    .navigationTitle("Mana")
-  }
 }
 
 #Preview {
-  let sidebar = SidebarColumnViewModel()
-  NavigationStack {
-    SidebarColumnView { sidebar.select($0) }
-  }
-  .environmentObject(sidebar)
+    let sidebar = SidebarColumnViewModel()
+    NavigationStack {
+        SidebarColumnView { sidebar.select($0) }
+    }
+    .environmentObject(sidebar)
 }

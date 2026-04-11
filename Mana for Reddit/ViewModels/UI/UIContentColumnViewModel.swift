@@ -32,7 +32,10 @@ final class ContentColumnViewModel: ObservableObject {
   }
 
   func load(refresh: Bool = false) async {
-    if refresh { reset() }
+    if refresh {
+      guard !isLoading, !isLoadingMore else { return }
+      reset()
+    }
 
     let isInitialLoad = posts.isEmpty
 

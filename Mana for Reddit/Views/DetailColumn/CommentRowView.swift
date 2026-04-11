@@ -9,25 +9,42 @@ import SwiftUI
 
 struct CommentRowView: View {
   let comment: Comment
+  let isCollapsed: Bool
+  let onToggleCollapse: () -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
       HStack {
-        Text(comment.author)
-          .font(.caption)
-          .fontWeight(.semibold)
-        if let relativeAge = comment.relativeCreatedDescription {
-          Text(relativeAge)
+        Button(action: onToggleCollapse) {
+          Image(systemName: isCollapsed ? "chevron.right" : "chevron.down")
             .font(.caption2)
             .foregroundStyle(.secondary)
         }
-        Spacer()
-        Label("\(comment.score)", systemImage: "arrow.up")
-          .font(.caption2)
-          .foregroundStyle(.secondary)
+        .buttonStyle(.plain)
+
+        if isCollapsed {
+          Text("Collapsed")
+            .font(.caption)
+            .foregroundStyle(.tertiary)
+        } else {
+          Text(comment.author)
+            .font(.caption)
+            .fontWeight(.semibold)
+          if let relativeAge = comment.relativeCreatedDescription {
+            Text(relativeAge)
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+          }
+          Spacer()
+          Label("\(comment.score)", systemImage: "arrow.up")
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+        }
       }
-      Text(comment.body)
-        .font(.body)
+      if !isCollapsed {
+        Text(comment.body)
+          .font(.body)
+      }
     }
     .padding(.leading, CGFloat(comment.depth) * 12)
     .padding(.vertical, 4)
@@ -43,7 +60,9 @@ struct CommentRowView: View {
       score: 42,
       depth: 0,
       replies: []
-    )
+    ),
+    isCollapsed: false,
+    onToggleCollapse: {}
   )
   .padding()
 }

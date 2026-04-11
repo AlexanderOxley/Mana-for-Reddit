@@ -55,40 +55,89 @@ struct ContentColumnView: View {
     }
     .navigationTitle(selectedFeed.title)
     .toolbar {
-      ToolbarItemGroup(placement: .automatic) {
-        Menu {
-          ForEach(PostSort.allCases, id: \.self) { option in
-            Button {
-              viewModel.sort = option
-            } label: {
-              if option == viewModel.sort {
-                Label(option.title, systemImage: "checkmark")
-              } else {
-                Text(option.title)
-              }
+      #if os(macOS)
+        ToolbarItemGroup(placement: .automatic) {
+          Button {
+            Task { @MainActor in
+              await viewModel.load(refresh: true)
             }
+          } label: {
+            Label("Refresh Posts", systemImage: "arrow.clockwise")
           }
-        } label: {
-          Text("Sort: \(viewModel.sort.title)")
-        }
 
-        Menu {
-          ForEach(TimeRange.allCases, id: \.self) { range in
-            Button {
-              viewModel.timeRange = range
-            } label: {
-              if range == viewModel.timeRange {
-                Label(range.title, systemImage: "checkmark")
-              } else {
-                Text(range.title)
+          Menu {
+            ForEach(PostSort.allCases, id: \.self) { option in
+              Button {
+                viewModel.sort = option
+              } label: {
+                if option == viewModel.sort {
+                  Label(option.title, systemImage: "checkmark")
+                } else {
+                  Text(option.title)
+                }
               }
             }
+          } label: {
+            Text("Sort: \(viewModel.sort.title)")
           }
-        } label: {
-          Text("Time: \(viewModel.timeRange.title)")
+
+          if viewModel.sort.supportsTimeRange {
+            Menu {
+              ForEach(TimeRange.allCases, id: \.self) { range in
+                Button {
+                  viewModel.timeRange = range
+                } label: {
+                  if range == viewModel.timeRange {
+                    Label(range.title, systemImage: "checkmark")
+                  } else {
+                    Text(range.title)
+                  }
+                }
+              }
+            } label: {
+              Text("Time: \(viewModel.timeRange.title)")
+            }
+          }
         }
-        .disabled(!viewModel.sort.supportsTimeRange)
-      }
+      #else
+        ToolbarItemGroup(placement: .bottomBar) {
+          Spacer()
+
+          Menu {
+            ForEach(PostSort.allCases, id: \.self) { option in
+              Button {
+                viewModel.sort = option
+              } label: {
+                if option == viewModel.sort {
+                  Label(option.title, systemImage: "checkmark")
+                } else {
+                  Text(option.title)
+                }
+              }
+            }
+          } label: {
+            Text("Sort: \(viewModel.sort.title)")
+          }
+
+          if viewModel.sort.supportsTimeRange {
+            Menu {
+              ForEach(TimeRange.allCases, id: \.self) { range in
+                Button {
+                  viewModel.timeRange = range
+                } label: {
+                  if range == viewModel.timeRange {
+                    Label(range.title, systemImage: "checkmark")
+                  } else {
+                    Text(range.title)
+                  }
+                }
+              }
+            } label: {
+              Text("Time: \(viewModel.timeRange.title)")
+            }
+          }
+        }
+      #endif
     }
     .onChange(of: viewModel.sort) { _, _ in
       Task { @MainActor in

@@ -1,0 +1,231 @@
+{
+  "fill" : {
+    "linear-gradient" : [
+      "srgb:1.00000,0.57637,0.00000,1.00000",
+      "srgb:0.00000,0.00000,0.00000,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:0.00000,0.00000,0.00000,1.00000",
+              "srgb:0.57919,0.12801,0.57269,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "circle.fill.png",
+          "name" : "circle.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.15,
+            "translation-in-points" : [
+              218.39999999999986,
+              -1.1368683772161603e-13
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:0.00000,0.00000,0.00000,1.00000",
+              "srgb:0.57919,0.12801,0.57269,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "circle.fill.png",
+          "name" : "circle.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.07,
+            "translation-in-points" : [
+              346.9262573242188,
+              0
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:0.00000,0.00000,0.00000,1.00000",
+              "srgb:1.00000,0.25279,1.00000,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "circle.fill.png",
+          "name" : "circle.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.3,
+            "translation-in-points" : [
+              -289.27644042968745,
+              0
+            ]
+          }
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:0.00000,0.00000,0.00000,1.00000",
+              "srgb:0.57919,0.12801,0.57269,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "circle.fill.png",
+          "name" : "circle.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.7,
+            "translation-in-points" : [
+              5.684341886080802e-14,
+              0
+            ]
+          }
+        },
+        {
+          "blend-mode" : "normal",
+          "fill" : {
+            "solid" : "srgb:0.00000,0.00000,0.00000,1.00000"
+          },
+          "glass" : true,
+          "image-name" : "circle.fill.png",
+          "name" : "circle.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.1,
+            "translation-in-points" : [
+              202.79999999999995,
+              -1.1368683772161603e-13
+            ]
+          }
+        },
+        {
+          "blend-mode" : "normal",
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:0.00000,0.00000,0.00000,1.00000",
+              "srgb:0.57919,0.12801,0.57269,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "circle.fill.png",
+          "name" : "circle.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.1,
+            "translation-in-points" : [
+              -454.58320312499995,
+              -1.1368683772161603e-13
+            ]
+          }
+        },
+        {
+          "blend-mode" : "normal",
+          "fill" : {
+            "linear-gradient" : [
+              "srgb:0.00000,0.00000,0.00000,1.00000",
+              "srgb:0.57919,0.12801,0.57269,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "glass" : true,
+          "image-name" : "circle.fill.png",
+          "name" : "circle.fill",
+          "opacity" : 1,
+          "position" : {
+            "scale" : 0.1,
+            "translation-in-points" : [
+              417.00065917968755,
+              -1.1368683772161603e-13
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
