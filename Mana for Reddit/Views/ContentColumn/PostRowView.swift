@@ -31,9 +31,7 @@ struct PostRowView: View {
       }
 
       VStack(alignment: .leading, spacing: 5) {
-        Text(post.title)
-          .font(.headline)
-          .lineLimit(3)
+        MarkdownTextView(markdown: post.title, font: .headline, lineLimit: 3)
 
         Text(
           "r/\(post.subreddit) · u/\(post.author)"

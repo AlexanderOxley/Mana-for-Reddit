@@ -25,4 +25,14 @@ final class PostTransportViewModel {
     after = result.after
     return result.posts
   }
+
+  func search(query: String, source: Source) async throws -> [Post] {
+    let result = try await TransportServices.searchPosts(
+      query: query,
+      source: source,
+      after: after
+    )
+    after = result.after
+    return result.posts
+  }
 }

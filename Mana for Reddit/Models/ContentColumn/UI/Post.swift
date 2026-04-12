@@ -15,12 +15,14 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
   let score: Int
   let numComments: Int
   let url: String
+  private let urlOverriddenByDest: String?
   let thumbnail: String?
   let permalink: String
   let selfText: String
   let createdUTC: Double?
   let postHint: String?
   let isVideo: Bool
+  private let videoHLSURLString: String?
   private let videoFallbackURLString: String?
   private let galleryImageURLStrings: [String]
 
@@ -45,6 +47,10 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
   }
 
   var videoURL: URL? {
+    // Prefer HLS because Reddit DASH fallback URLs are often video-only (no audio track).
+    if let videoHLSURLString {
+      return URL(string: Self.normalizedURLString(videoHLSURLString))
+    }
     guard let videoFallbackURLString else { return nil }
     return URL(string: Self.normalizedURLString(videoFallbackURLString))
   }
@@ -52,8 +58,7 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
   var imageURL: URL? {
     if !galleryImageURLs.isEmpty || videoURL != nil { return nil }
 
-    let normalized = Self.normalizedURLString(url)
-    guard let candidate = URL(string: normalized) else { return nil }
+    guard let candidate = contentURL else { return nil }
 
     if postHint == "image" { return candidate }
 
@@ -63,6 +68,17 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
     }
 
     return nil
+  }
+
+  var contentURL: URL? {
+    let preferred = urlOverriddenByDest ?? url
+    let normalized = Self.normalizedURLString(preferred)
+    return URL(string: normalized)
+  }
+
+  var isExternalLink: Bool {
+    guard let host = contentURL?.host else { return false }
+    return !host.hasSuffix("reddit.com") && !host.hasSuffix("redd.it")
   }
 
   private static func normalizedURLString(_ value: String) -> String {
@@ -79,6 +95,7 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
     score = (try? container.decode(Int.self, forKey: .score)) ?? 0
     numComments = (try? container.decode(Int.self, forKey: .numComments)) ?? 0
     url = (try? container.decode(String.self, forKey: .url)) ?? ""
+    urlOverriddenByDest = try? container.decode(String.self, forKey: .urlOverriddenByDest)
     thumbnail = try? container.decode(String.self, forKey: .thumbnail)
     permalink = (try? container.decode(String.self, forKey: .permalink)) ?? ""
     selfText = (try? container.decode(String.self, forKey: .selfText)) ?? ""
@@ -87,10 +104,12 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
     isVideo = (try? container.decode(Bool.self, forKey: .isVideo)) ?? false
 
     if let media = try? container.decode(PostMediaDTO.self, forKey: .media),
-      let fallback = media.redditVideo?.fallbackURL
+      let redditVideo = media.redditVideo
     {
-      videoFallbackURLString = fallback
+      videoHLSURLString = redditVideo.hlsURL
+      videoFallbackURLString = redditVideo.fallbackURL
     } else {
+      videoHLSURLString = nil
       videoFallbackURLString = nil
     }
 
@@ -115,12 +134,14 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
     score: Int,
     numComments: Int,
     url: String,
+    urlOverriddenByDest: String? = nil,
     thumbnail: String?,
     permalink: String,
     selfText: String = "",
     createdUTC: Double? = nil,
     postHint: String? = nil,
     isVideo: Bool = false,
+    videoHLSURLString: String? = nil,
     videoFallbackURLString: String? = nil,
     galleryImageURLStrings: [String] = []
   ) {
@@ -131,12 +152,14 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
     self.score = score
     self.numComments = numComments
     self.url = url
+    self.urlOverriddenByDest = urlOverriddenByDest
     self.thumbnail = thumbnail
     self.permalink = permalink
     self.selfText = selfText
     self.createdUTC = createdUTC
     self.postHint = postHint
     self.isVideo = isVideo
+    self.videoHLSURLString = videoHLSURLString
     self.videoFallbackURLString = videoFallbackURLString
     self.galleryImageURLStrings = galleryImageURLStrings
   }
@@ -151,9 +174,11 @@ private struct PostMediaDTO: Decodable {
 }
 
 private struct RedditVideoDTO: Decodable {
+  let hlsURL: String?
   let fallbackURL: String?
 
   enum CodingKeys: String, CodingKey {
+    case hlsURL = "hls_url"
     case fallbackURL = "fallback_url"
   }
 }

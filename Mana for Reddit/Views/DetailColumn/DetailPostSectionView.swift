@@ -11,6 +11,14 @@ struct DetailPostSectionView: View {
   let item: Post
 
   var body: some View {
+    let hasRenderableMediaOrText =
+      !item.galleryImageURLs.isEmpty
+      || item.videoURL != nil
+      || item.imageURL != nil
+      || !item.selfText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    let unsupportedContentURL =
+      (hasRenderableMediaOrText || !item.isExternalLink) ? nil : item.contentURL
+
     VStack(alignment: .leading, spacing: 12) {
       if !item.galleryImageURLs.isEmpty {
         DetailPostGalleryView(imageURLs: item.galleryImageURLs)
@@ -21,17 +29,22 @@ struct DetailPostSectionView: View {
       }
 
       if !item.selfText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        Text(item.selfText)
-          .textSelection(.enabled)
+        MarkdownTextView(markdown: item.selfText, font: .body)
       }
 
-      if item.galleryImageURLs.isEmpty,
-        item.videoURL == nil,
-        item.imageURL == nil,
-        item.selfText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-      {
+      if !hasRenderableMediaOrText {
         Text("No post body available.")
           .foregroundStyle(.secondary)
+
+        if let externalURL = unsupportedContentURL {
+          DetailColumnInAppBrowserView(url: externalURL)
+            .frame(minHeight: 360)
+
+          Text(externalURL.absoluteString)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .textSelection(.enabled)
+        }
       }
     }
   }

@@ -20,7 +20,14 @@ final class ContentColumnViewModel: ObservableObject {
   @Published var errorMessage: String?
   @Published var hasMore = true
 
+  @Published var searchText = ""
+  @Published var searchResults: [Post] = []
+  @Published var isSearchActive = false
+
+  var displayedPosts: [Post] { isSearchActive ? searchResults : posts }
+
   private var transport = PostTransportViewModel()
+  private var searchTask: Task<Void, Never>?
 
   init(source: Source) {
     self.source = source
@@ -67,6 +74,35 @@ final class ContentColumnViewModel: ObservableObject {
     } catch {
       errorMessage = error.localizedDescription
       if isInitialLoad { hasMore = false }
+    }
+  }
+
+  func updateSearchQuery(_ query: String) {
+    searchTask?.cancel()
+    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    guard !trimmed.isEmpty else {
+      isSearchActive = false
+      searchResults = []
+      return
+    }
+
+    searchTask = Task {
+      isSearchActive = true
+      isLoading = true
+      do {
+        try await Task.sleep(nanoseconds: 350_000_000)
+        guard !Task.isCancelled else { return }
+        let transport = PostTransportViewModel()
+        let results = try await transport.search(query: trimmed, source: source)
+        guard !Task.isCancelled else { return }
+        searchResults = results
+      } catch {
+        if Task.isCancelled { return }
+        searchResults = []
+        errorMessage = error.localizedDescription
+      }
+      isLoading = false
     }
   }
 

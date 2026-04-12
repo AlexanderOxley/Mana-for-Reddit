@@ -15,10 +15,10 @@ struct ContentColumnView: View {
 
   var body: some View {
     Group {
-      if viewModel.isLoading && viewModel.posts.isEmpty {
+      if viewModel.isLoading && viewModel.displayedPosts.isEmpty {
         ProgressView("Loading…")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else if let error = viewModel.errorMessage, viewModel.posts.isEmpty {
+      } else if let error = viewModel.errorMessage, viewModel.displayedPosts.isEmpty {
         ContentUnavailableView(
           "Could not load posts",
           systemImage: "exclamationmark.triangle",
@@ -26,11 +26,15 @@ struct ContentColumnView: View {
         )
       } else {
         List(selection: $selectedPost) {
-          ForEach(viewModel.posts) { post in
+          Section {
+            SearchBarRow(prompt: "Search posts", text: $viewModel.searchText)
+          }
+
+          ForEach(viewModel.displayedPosts) { post in
             PostRowView(post: post)
               .tag(post)
               .onAppear {
-                if post.id == viewModel.posts.last?.id {
+                if !viewModel.isSearchActive, post.id == viewModel.posts.last?.id {
                   Task { @MainActor in
                     await Task.yield()
                     await viewModel.load()
@@ -160,6 +164,9 @@ struct ContentColumnView: View {
     }
     .onAppear {
       selectedPost = detailViewModel.post
+    }
+    .onChange(of: viewModel.searchText) { _, newValue in
+      viewModel.updateSearchQuery(newValue)
     }
     .task(id: selectedFeed.id) {
       guard viewModel.posts.isEmpty else { return }

@@ -23,9 +23,19 @@ struct CommentRowView: View {
         .buttonStyle(.plain)
 
         if isCollapsed {
-          Text("Collapsed")
-            .font(.caption)
-            .foregroundStyle(.tertiary)
+          Text(
+            [
+              "Collapsed:",
+              comment.author,
+              comment.relativeCreatedDescription,
+              "\(comment.score)",
+            ]
+            .compactMap { $0 }
+            .joined(separator: " ")
+          )
+          .font(.caption)
+          .foregroundStyle(.secondary)
+          Spacer()
         } else {
           Text(comment.author)
             .font(.caption)
@@ -42,12 +52,20 @@ struct CommentRowView: View {
         }
       }
       if !isCollapsed {
-        Text(comment.body)
-          .font(.body)
+        MarkdownTextView(markdown: comment.body, font: .body)
+
+        if let previewImageURL = comment.previewImageURL {
+          DetailPostImageView(imageURL: previewImageURL)
+            .frame(minHeight: 180)
+        } else if let giphyGIFURL = comment.giphyGIFURL {
+          CommentGIFView(gifURL: giphyGIFURL)
+        }
       }
     }
     .padding(.leading, CGFloat(comment.depth) * 12)
     .padding(.vertical, 4)
+    .contentShape(Rectangle())
+    .onTapGesture(count: 2, perform: onToggleCollapse)
   }
 }
 

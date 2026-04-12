@@ -13,14 +13,14 @@ struct Source: Identifiable, Hashable, Sendable {
   let icon: String
   let listingPathPrefix: String
 
-  static let frontPage = Source(
+  nonisolated(unsafe) static let frontPage = Source(
     id: "front-page",
     title: "Front Page",
     icon: "house.fill",
     listingPathPrefix: ""
   )
 
-  static let defaults: [Source] = [.frontPage]
+  nonisolated(unsafe) static let defaults: [Source] = [.frontPage]
 
   static func subreddit(_ name: String) -> Source {
     let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)

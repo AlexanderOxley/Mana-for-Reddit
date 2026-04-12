@@ -8,9 +8,18 @@
 import SwiftUI
 
 struct DetailCommentsSectionView: View {
+  @Binding var searchText: String
   @EnvironmentObject private var viewModel: DetailColumnViewModel
 
   var body: some View {
+    let visibleComments =
+      searchText.isEmpty
+      ? viewModel.visibleComments
+      : viewModel.comments.filter {
+        $0.author.localizedCaseInsensitiveContains(searchText)
+          || $0.body.localizedCaseInsensitiveContains(searchText)
+      }
+
     if viewModel.isLoading {
       ProgressView("Loading comments…")
         .frame(maxWidth: .infinity)
@@ -21,7 +30,8 @@ struct DetailCommentsSectionView: View {
       Text("No comments yet.")
         .foregroundStyle(.secondary)
     } else {
-      ForEach(viewModel.visibleComments) { comment in
+      SearchBarRow(prompt: "Search comments", text: $searchText)
+      ForEach(visibleComments) { comment in
         CommentRowView(
           comment: comment,
           isCollapsed: viewModel.isCollapsed(comment.id),
@@ -75,7 +85,7 @@ struct DetailCommentsSectionView: View {
 
   List {
     Section("Comments") {
-      DetailCommentsSectionView()
+      DetailCommentsSectionView(searchText: .constant(""))
     }
   }
   .environmentObject(vm)

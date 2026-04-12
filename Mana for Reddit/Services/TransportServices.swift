@@ -10,6 +10,7 @@ import Foundation
 struct TransportServices {
   private static let userAgent = "ios:com.mana.reddit:v1.0 (by /u/mana-app)"
 
+  @MainActor
   static func fetchPosts(
     source: Source = .frontPage,
     sort: PostSort = .best,
@@ -93,5 +94,50 @@ struct TransportServices {
     guard listings.count >= 2 else { throw ManaRedditServiceError.unexpectedFormat }
     let comments = listings[1].data.children.compactMap { $0.kind == "t1" ? $0.comment : nil }
     return (comments, listings[1].data.after)
+  }
+
+  static func searchPosts(
+    query: String,
+    source: Source,
+    after: String?,
+    limit: Int = 25
+  ) async throws -> (posts: [Post], after: String?) {
+    let basePath =
+      source.listingPathPrefix.isEmpty
+      ? "https://www.reddit.com/search.json"
+      : "https://www.reddit.com\(source.listingPathPrefix)/search.json"
+
+    var components = URLComponents(string: basePath)
+    var queryItems = [
+      URLQueryItem(name: "q", value: query),
+      URLQueryItem(name: "limit", value: "\(limit)"),
+    ]
+    if !source.listingPathPrefix.isEmpty {
+      queryItems.append(URLQueryItem(name: "restrict_sr", value: "1"))
+    }
+    if let after {
+      queryItems.append(URLQueryItem(name: "after", value: after))
+    }
+    components?.queryItems = queryItems
+
+    guard let url = components?.url else {
+      throw ManaRedditServiceError.unexpectedFormat
+    }
+
+    var request = URLRequest(url: url)
+    request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    guard let http = response as? HTTPURLResponse else {
+      throw ManaRedditServiceError.unexpectedFormat
+    }
+    guard http.statusCode == 200 else {
+      throw ManaRedditServiceError.invalidResponse(http.statusCode)
+    }
+
+    let listing = try JSONDecoder().decode(PostListingDTO.self, from: data)
+    let posts = listing.data.children.map { $0.data }
+    return (posts, listing.data.after)
   }
 }

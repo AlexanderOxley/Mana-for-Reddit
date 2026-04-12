@@ -11,11 +11,12 @@ struct DetailColumnView: View {
   let item: Post
   @EnvironmentObject private var detailViewModel: DetailColumnViewModel
   @EnvironmentObject private var contentViewModel: ContentColumnViewModel
+  @State private var commentSearchText = ""
 
   var body: some View {
 
     List(selection: $detailViewModel.selectedCommentID) {
-        Section {
+      Section {
         DetailHeaderSectionView(item: item)
       }
 
@@ -24,7 +25,7 @@ struct DetailColumnView: View {
       }
 
       Section {
-        DetailCommentsSectionView()
+        DetailCommentsSectionView(searchText: $commentSearchText)
       }
     }
     .listStyle(.plain)

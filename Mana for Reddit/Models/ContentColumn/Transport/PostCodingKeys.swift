@@ -16,6 +16,7 @@ enum PostCodingKeys: String, CodingKey {
   case subreddit = "subreddit"
   case score = "score"
   case url = "url"
+  case urlOverriddenByDest = "url_overridden_by_dest"
   case thumbnail = "thumbnail"
   case permalink = "permalink"
   case selfText = "selftext"
