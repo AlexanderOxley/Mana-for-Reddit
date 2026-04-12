@@ -11,7 +11,16 @@ struct Comment: Identifiable, Decodable {
   let id: String
   let author: String
   let body: String
+  let ups: Int
   let score: Int
+  let editedUTC: Double?
+  let gilded: Int
+  let distinguished: String?
+  let stickied: Bool
+  let permalink: String
+  let controversiality: Int
+  let parentID: String?
+  let linkID: String?
   let depth: Int
   let replies: [Comment]
   let createdUTC: Double?
@@ -30,6 +39,16 @@ struct Comment: Identifiable, Decodable {
   var relativeCreatedDescription: String? {
     guard let createdDate else { return nil }
     return Self.relativeFormatter.localizedString(for: createdDate, relativeTo: Date())
+  }
+
+  var editedDate: Date? {
+    guard let editedUTC else { return nil }
+    return Date(timeIntervalSince1970: editedUTC)
+  }
+
+  var relativeEditedDescription: String? {
+    guard let editedDate else { return nil }
+    return Self.relativeFormatter.localizedString(for: editedDate, relativeTo: Date())
   }
 
   var previewImageURL: URL? {
@@ -85,7 +104,16 @@ struct Comment: Identifiable, Decodable {
     id: String,
     author: String,
     body: String,
+    ups: Int = 0,
     score: Int,
+    editedUTC: Double? = nil,
+    gilded: Int = 0,
+    distinguished: String? = nil,
+    stickied: Bool = false,
+    permalink: String = "",
+    controversiality: Int = 0,
+    parentID: String? = nil,
+    linkID: String? = nil,
     depth: Int,
     replies: [Comment],
     createdUTC: Double? = nil
@@ -93,7 +121,16 @@ struct Comment: Identifiable, Decodable {
     self.id = id
     self.author = author
     self.body = body
+    self.ups = ups
     self.score = score
+    self.editedUTC = editedUTC
+    self.gilded = gilded
+    self.distinguished = distinguished
+    self.stickied = stickied
+    self.permalink = permalink
+    self.controversiality = controversiality
+    self.parentID = parentID
+    self.linkID = linkID
     self.depth = depth
     self.replies = replies
     self.createdUTC = createdUTC
@@ -105,7 +142,16 @@ struct Comment: Identifiable, Decodable {
     id = (try? c.decode(String.self, forKey: .id)) ?? UUID().uuidString
     author = (try? c.decode(String.self, forKey: .author)) ?? "[deleted]"
     body = (try? c.decode(String.self, forKey: .body)) ?? ""
+    ups = (try? c.decode(Int.self, forKey: .ups)) ?? 0
     score = (try? c.decode(Int.self, forKey: .score)) ?? 0
+    editedUTC = Self.decodeEditedUTC(from: c)
+    gilded = (try? c.decode(Int.self, forKey: .gilded)) ?? 0
+    distinguished = try? c.decode(String.self, forKey: .distinguished)
+    stickied = (try? c.decode(Bool.self, forKey: .stickied)) ?? false
+    permalink = (try? c.decode(String.self, forKey: .permalink)) ?? ""
+    controversiality = (try? c.decode(Int.self, forKey: .controversiality)) ?? 0
+    parentID = try? c.decode(String.self, forKey: .parentID)
+    linkID = try? c.decode(String.self, forKey: .linkID)
     depth = (try? c.decode(Int.self, forKey: .depth)) ?? 0
     createdUTC = try? c.decode(Double.self, forKey: .createdUTC)
 
@@ -115,5 +161,16 @@ struct Comment: Identifiable, Decodable {
     } else {
       replies = []
     }
+  }
+
+  private static func decodeEditedUTC(
+    from container: KeyedDecodingContainer<RedditCommentCodingKeys>
+  )
+    -> Double?
+  {
+    if let editedTimestamp = try? container.decode(Double.self, forKey: .edited) {
+      return editedTimestamp
+    }
+    return nil
   }
 }

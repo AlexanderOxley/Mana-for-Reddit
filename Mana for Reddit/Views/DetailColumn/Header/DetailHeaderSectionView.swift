@@ -14,15 +14,9 @@ struct DetailHeaderSectionView: View {
     VStack(alignment: .leading, spacing: 8) {
       MarkdownTextView(markdown: item.title, font: .headline)
         .fixedSize(horizontal: false, vertical: true)
-      Text("r/\(item.subreddit) · u/\(item.author)")
-        .font(.caption)
-        .foregroundStyle(.secondary)
-      HStack(spacing: 12) {
-        Label("\(item.score)", systemImage: "arrow.up")
-        Label("\(item.numComments)", systemImage: "bubble.right")
-      }
-      .font(.caption)
-      .foregroundStyle(.secondary)
+      PostBadgesView(post: item)
+      PostAttributionView(post: item)
+      PostEngagementView(post: item)
     }
     .padding(.vertical, 4)
   }

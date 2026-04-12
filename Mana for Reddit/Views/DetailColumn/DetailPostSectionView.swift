@@ -11,41 +11,34 @@ struct DetailPostSectionView: View {
   let item: Post
 
   var body: some View {
-    let hasRenderableMediaOrText =
-      !item.galleryImageURLs.isEmpty
-      || item.videoURL != nil
-      || item.imageURL != nil
-      || !item.selfText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    let unsupportedContentURL =
-      (hasRenderableMediaOrText || !item.isExternalLink) ? nil : item.contentURL
-
     VStack(alignment: .leading, spacing: 12) {
-      if !item.galleryImageURLs.isEmpty {
-        DetailPostGalleryView(imageURLs: item.galleryImageURLs)
-      } else if let videoURL = item.videoURL {
+      switch item.contentIntent {
+      case .gallery(let imageURLs):
+        DetailPostGalleryView(imageURLs: imageURLs)
+      case .video(let videoURL):
         DetailPostVideoView(videoURL: videoURL)
-      } else if let imageURL = item.imageURL {
+      case .image(let imageURL):
         DetailPostImageView(imageURL: imageURL)
-      }
+      case .text(let selfText):
+        MarkdownTextView(markdown: selfText, font: .body)
+      case .thirdParty(let embed):
+        ThirdPartyEmbedContainerView(embed: embed)
+      case .externalLink(let externalURL):
+        Text("External content")
+          .foregroundStyle(.secondary)
+        DetailColumnInAppBrowserView(url: externalURL)
+          .frame(minHeight: 360)
 
-      if !item.selfText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        MarkdownTextView(markdown: item.selfText, font: .body)
-      }
-
-      if !hasRenderableMediaOrText {
+        Text(externalURL.host() ?? externalURL.absoluteString)
+          .font(.caption)
+          .foregroundStyle(.secondary)
+      case .none:
         Text("No post body available.")
           .foregroundStyle(.secondary)
-
-        if let externalURL = unsupportedContentURL {
-          DetailColumnInAppBrowserView(url: externalURL)
-            .frame(minHeight: 360)
-
-          Text(externalURL.absoluteString)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .textSelection(.enabled)
-        }
       }
+
+      PostBadgesView(post: item)
+      PostSupplementaryMetadataView(post: item)
     }
   }
 }
