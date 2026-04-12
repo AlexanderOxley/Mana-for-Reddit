@@ -28,13 +28,18 @@ struct ThirdPartyImgurView: View {
 }
 
 #Preview {
-  ThirdPartyImgurView(
-    embed: ThirdPartyEmbed(
+  ThirdPartyPreviewRedditPostLoader(
+    redditPostURL: URL(
+      string: "https://www.reddit.com/r/PoliticalHumor/comments/1sjmkgb/not_all_first_ladies_were_porn_stars/")!,
+    fallbackEmbed: ThirdPartyEmbed(
       provider: .imgur,
       url: URL(string: "https://imgur.com/gallery/example")!,
       title: "Imgur Gallery",
       providerName: "Imgur"
-    )
-  )
+    ),
+    expectedProvider: .imgur
+  ) { embed in
+    ThirdPartyImgurView(embed: embed)
+  }
   .padding()
 }

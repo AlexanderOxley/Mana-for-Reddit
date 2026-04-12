@@ -12,6 +12,8 @@ import Foundation
 enum RedditCommentCodingKeys: String, CodingKey {
   case id = "id"
   case author = "author"
+  case authorFlairText = "author_flair_text"
+  case authorFlairRichtext = "author_flair_richtext"
   case body = "body"
   case ups = "ups"
   case score = "score"

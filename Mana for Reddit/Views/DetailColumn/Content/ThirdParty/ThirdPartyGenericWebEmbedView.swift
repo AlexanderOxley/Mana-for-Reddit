@@ -32,13 +32,20 @@ struct ThirdPartyGenericWebEmbedView: View {
 }
 
 #Preview {
-  ThirdPartyGenericWebEmbedView(
-    embed: ThirdPartyEmbed(
+  ThirdPartyPreviewRedditPostLoader(
+    redditPostURL: URL(
+      string:
+        "https://www.reddit.com/r/soccer/comments/1sjfuig/sunderland_10_tottenham_nordi_mukiele_61/"
+    )!,
+    fallbackEmbed: ThirdPartyEmbed(
       provider: .other,
-      url: URL(string: "https://example.com/article")!,
-      title: "Article",
-      providerName: "Example"
-    )
-  )
+      url: URL(string: "https://streamff.link/v/example")!,
+      title: "Streamff Video",
+      providerName: "streamff.link"
+    ),
+    expectedProvider: .other
+  ) { embed in
+    ThirdPartyGenericWebEmbedView(embed: embed)
+  }
   .padding()
 }

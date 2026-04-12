@@ -28,13 +28,18 @@ struct ThirdPartyTikTokView: View {
 }
 
 #Preview {
-  ThirdPartyTikTokView(
-    embed: ThirdPartyEmbed(
+  ThirdPartyPreviewRedditPostLoader(
+    redditPostURL: URL(
+      string: "https://www.reddit.com/r/TikTok/comments/1sjp6ns/evolving_with_dani_is_live/")!,
+    fallbackEmbed: ThirdPartyEmbed(
       provider: .tiktok,
       url: URL(string: "https://www.tiktok.com/@example/video/123")!,
       title: "TikTok",
       providerName: "TikTok"
-    )
-  )
+    ),
+    expectedProvider: .tiktok
+  ) { embed in
+    ThirdPartyTikTokView(embed: embed)
+  }
   .padding()
 }

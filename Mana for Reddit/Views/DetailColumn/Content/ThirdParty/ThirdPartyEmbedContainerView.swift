@@ -38,6 +38,8 @@ struct ThirdPartyEmbedContainerView: View {
         ThirdPartyYouTubeView(embed: embed)
       case .twitter:
         ThirdPartyTwitterView(embed: embed)
+      case .streamff:
+        ThirdPartyStreamffView(embed: embed)
       case .twitch:
         ThirdPartyTwitchView(embed: embed)
       case .tiktok:
@@ -61,6 +63,7 @@ struct ThirdPartyEmbedContainerView: View {
     case .youtube: return "play.rectangle.fill"
     case .twitter: return "bubble.left.and.bubble.right.fill"
     case .redgifs: return "flame.fill"
+    case .streamff: return "play.tv.fill"
     case .vimeo: return "video.fill"
     case .tiktok: return "music.note"
     case .instagram: return "camera.circle"

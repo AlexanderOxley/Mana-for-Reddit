@@ -140,8 +140,8 @@ private struct EmbeddedYouTubePlayerView: View {
 
     private func load(videoID: String, into webView: WKWebView, coordinator: Coordinator) {
       guard coordinator.loadedVideoID != videoID else { return }
-      guard let request = EmbeddedYouTubeURLBuilder.watchRequest(videoID: videoID) else { return }
-      webView.load(request)
+      let html = EmbeddedYouTubeHTMLBuilder.document(videoID: videoID)
+      webView.loadHTMLString(html, baseURL: URL(string: "https://www.youtube-nocookie.com"))
       coordinator.loadedVideoID = videoID
     }
   }
@@ -175,37 +175,71 @@ private struct EmbeddedYouTubePlayerView: View {
 
     private func load(videoID: String, into webView: WKWebView, coordinator: Coordinator) {
       guard coordinator.loadedVideoID != videoID else { return }
-      guard let request = EmbeddedYouTubeURLBuilder.watchRequest(videoID: videoID) else { return }
-      webView.load(request)
+      let html = EmbeddedYouTubeHTMLBuilder.document(videoID: videoID)
+      webView.loadHTMLString(html, baseURL: URL(string: "https://www.youtube-nocookie.com"))
       coordinator.loadedVideoID = videoID
     }
   }
 #endif
 
-private enum EmbeddedYouTubeURLBuilder {
-  static func watchURL(videoID: String) -> URL? {
-    var components = URLComponents(string: "https://m.youtube.com/watch")
-    components?.queryItems = [
-      URLQueryItem(name: "v", value: videoID),
-      URLQueryItem(name: "app", value: "desktop"),
-    ]
-    return components?.url
-  }
+private enum EmbeddedYouTubeHTMLBuilder {
+  static func document(videoID: String) -> String {
+    let escapedID = videoID.replacingOccurrences(of: "\"", with: "")
 
-  static func watchRequest(videoID: String) -> URLRequest? {
-    guard let url = watchURL(videoID: videoID) else { return nil }
-    return URLRequest(url: url)
+    return """
+      <!doctype html>
+      <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <style>
+          html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: black;
+          }
+
+          .player {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+          }
+        </style>
+      </head>
+      <body>
+        <iframe
+          class="player"
+          src="https://www.youtube-nocookie.com/embed/\(escapedID)?playsinline=1&rel=0&modestbranding=1"
+          title="YouTube video player"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
+      </body>
+      </html>
+      """
   }
 }
 
 #Preview {
-  ThirdPartyYouTubeView(
-    embed: ThirdPartyEmbed(
+  ThirdPartyPreviewRedditPostLoader(
+    redditPostURL: URL(
+      string:
+        "https://www.reddit.com/r/msnow/comments/1sjq1oe/breaking_hungarian_prime_minister_viktor_orb%C3%A1n/"
+    )!,
+    fallbackEmbed: ThirdPartyEmbed(
       provider: .youtube,
       url: URL(string: "https://www.youtube.com/watch?v=J8uLWPHu1sI")!,
       title: "Never Gonna Give You Up",
       providerName: "YouTube"
-    )
-  )
+    ),
+    expectedProvider: .youtube
+  ) { embed in
+    ThirdPartyYouTubeView(embed: embed)
+  }
   .padding()
 }

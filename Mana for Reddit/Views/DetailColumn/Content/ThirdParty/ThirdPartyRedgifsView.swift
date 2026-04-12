@@ -28,13 +28,18 @@ struct ThirdPartyRedgifsView: View {
 }
 
 #Preview {
-  ThirdPartyRedgifsView(
-    embed: ThirdPartyEmbed(
+  ThirdPartyPreviewRedditPostLoader(
+    redditPostURL: URL(
+      string: "https://www.reddit.com/r/JizzedToThis/comments/1sjn4sl/wild_guessing_game/")!,
+    fallbackEmbed: ThirdPartyEmbed(
       provider: .redgifs,
       url: URL(string: "https://www.redgifs.com/watch/example")!,
       title: "Redgifs Clip",
       providerName: "Redgifs"
-    )
-  )
+    ),
+    expectedProvider: .redgifs
+  ) { embed in
+    ThirdPartyRedgifsView(embed: embed)
+  }
   .padding()
 }

@@ -55,6 +55,15 @@ struct CommentRowView: View {
           Text(comment.author)
             .font(.caption)
             .fontWeight(.semibold)
+          if let authorFlairText = comment.authorFlairText,
+            !authorFlairText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+          {
+            Text(authorFlairText)
+              .font(.caption2)
+              .padding(.horizontal, 6)
+              .padding(.vertical, 2)
+              .background(.quaternary, in: Capsule())
+          }
           if let relativeAge = comment.relativeCreatedDescription {
             Text(relativeAge)
               .font(.caption2)
@@ -162,6 +171,33 @@ struct CommentRowView: View {
       depth: 0,
       replies: [],
       createdUTC: Date().addingTimeInterval(-18000).timeIntervalSince1970
+    ),
+    isCollapsed: false,
+    onToggleCollapse: {}
+  )
+  .padding()
+}
+
+#Preview("Author Flair") {
+  CommentRowView(
+    comment: Comment(
+      id: "c7",
+      author: "team_member",
+      authorFlairText: "Swift Team",
+      body: "Author flair now shows next to the username.",
+      ups: 87,
+      score: 87,
+      editedUTC: nil,
+      gilded: 0,
+      distinguished: nil,
+      stickied: false,
+      permalink: "/r/swift/comments/c7",
+      controversiality: 0,
+      parentID: nil,
+      linkID: nil,
+      depth: 0,
+      replies: [],
+      createdUTC: Date().addingTimeInterval(-5000).timeIntervalSince1970
     ),
     isCollapsed: false,
     onToggleCollapse: {}

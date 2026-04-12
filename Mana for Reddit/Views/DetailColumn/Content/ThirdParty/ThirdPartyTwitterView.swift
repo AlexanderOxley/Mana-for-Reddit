@@ -28,13 +28,20 @@ struct ThirdPartyTwitterView: View {
 }
 
 #Preview {
-  ThirdPartyTwitterView(
-    embed: ThirdPartyEmbed(
+  ThirdPartyPreviewRedditPostLoader(
+    redditPostURL: URL(
+      string:
+        "https://www.reddit.com/r/Conservative/comments/1sjhc30/iran_played_its_biggest_card_and_the_main_result/"
+    )!,
+    fallbackEmbed: ThirdPartyEmbed(
       provider: .twitter,
       url: URL(string: "https://x.com/SwiftLang/status/123")!,
       title: "X Post",
       providerName: "Twitter"
-    )
-  )
+    ),
+    expectedProvider: .twitter
+  ) { embed in
+    ThirdPartyTwitterView(embed: embed)
+  }
   .padding()
 }

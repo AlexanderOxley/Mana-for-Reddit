@@ -21,6 +21,7 @@ enum ThirdPartyProvider: String, Hashable {
   case youtube
   case twitter
   case redgifs
+  case streamff
   case vimeo
   case tiktok
   case instagram
@@ -38,6 +39,7 @@ enum ThirdPartyProvider: String, Hashable {
     case .youtube: return "YouTube"
     case .twitter: return "X / Twitter"
     case .redgifs: return "Redgifs"
+    case .streamff: return "Streamff"
     case .vimeo: return "Vimeo"
     case .tiktok: return "TikTok"
     case .instagram: return "Instagram"
@@ -259,6 +261,9 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
     }
     if host.contains("redgifs.com") || host.contains("gfycat.com") || provider.contains("redgifs") {
       return .redgifs
+    }
+    if host.contains("streamff.link") || provider.contains("streamff") {
+      return .streamff
     }
     if host.contains("vimeo.com") || provider.contains("vimeo") {
       return .vimeo

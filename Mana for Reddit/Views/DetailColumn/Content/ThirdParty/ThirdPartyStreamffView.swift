@@ -1,13 +1,13 @@
 //
-//  ThirdPartyNewsArticleView.swift
+//  ThirdPartyStreamffView.swift
 //  Mana for Reddit
 //
-//  Created by Alexander Oxley on 12.04.2026.
+//  Created by GitHub Copilot on 12.04.2026.
 //
 
 import SwiftUI
 
-struct ThirdPartyNewsArticleView: View {
+struct ThirdPartyStreamffView: View {
   let embed: ThirdPartyEmbed
 
   var body: some View {
@@ -17,15 +17,12 @@ struct ThirdPartyNewsArticleView: View {
       {
         Text(title)
           .font(.subheadline)
+          .lineLimit(2)
       }
 
       DetailColumnInAppBrowserView(url: embed.url)
-        .frame(minHeight: 300)
+        .frame(minHeight: 360)
         .clipShape(RoundedRectangle(cornerRadius: 10))
-
-      Text(embed.url.host() ?? embed.url.absoluteString)
-        .font(.caption)
-        .foregroundStyle(.secondary)
     }
   }
 }
@@ -34,16 +31,17 @@ struct ThirdPartyNewsArticleView: View {
   ThirdPartyPreviewRedditPostLoader(
     redditPostURL: URL(
       string:
-        "https://old.reddit.com/r/worldnews/comments/1sjmkgb/not_all_first_ladies_were_porn_stars/")!,
+        "https://www.reddit.com/r/soccer/comments/1sjfuig/sunderland_10_tottenham_nordi_mukiele_61/"
+    )!,
     fallbackEmbed: ThirdPartyEmbed(
-      provider: .nytimes,
-      url: URL(string: "https://www.nytimes.com/example")!,
-      title: "News Article",
-      providerName: "NYTimes"
+      provider: .streamff,
+      url: URL(string: "https://streamff.link/v/example")!,
+      title: "Streamff Video",
+      providerName: "streamff.link"
     ),
-    expectedProvider: .nytimes
+    expectedProvider: .streamff
   ) { embed in
-    ThirdPartyNewsArticleView(embed: embed)
+    ThirdPartyStreamffView(embed: embed)
   }
   .padding()
 }

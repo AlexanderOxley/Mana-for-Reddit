@@ -28,13 +28,20 @@ struct ThirdPartyTwitchView: View {
 }
 
 #Preview {
-  ThirdPartyTwitchView(
-    embed: ThirdPartyEmbed(
+  ThirdPartyPreviewRedditPostLoader(
+    redditPostURL: URL(
+      string:
+        "https://www.reddit.com/r/formula1/comments/1sjla8x/ot_how_many_formula_1_race_wins_do_you_have_max/"
+    )!,
+    fallbackEmbed: ThirdPartyEmbed(
       provider: .twitch,
       url: URL(string: "https://www.twitch.tv/videos/123456")!,
       title: "Twitch Clip",
       providerName: "Twitch"
-    )
-  )
+    ),
+    expectedProvider: .twitch
+  ) { embed in
+    ThirdPartyTwitchView(embed: embed)
+  }
   .padding()
 }

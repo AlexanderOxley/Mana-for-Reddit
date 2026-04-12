@@ -10,6 +10,7 @@ import Foundation
 struct Comment: Identifiable, Decodable {
   let id: String
   let author: String
+  let authorFlairText: String?
   let body: String
   let ups: Int
   let score: Int
@@ -103,6 +104,7 @@ struct Comment: Identifiable, Decodable {
   init(
     id: String,
     author: String,
+    authorFlairText: String? = nil,
     body: String,
     ups: Int = 0,
     score: Int,
@@ -120,6 +122,7 @@ struct Comment: Identifiable, Decodable {
   ) {
     self.id = id
     self.author = author
+    self.authorFlairText = authorFlairText
     self.body = body
     self.ups = ups
     self.score = score
@@ -141,6 +144,7 @@ struct Comment: Identifiable, Decodable {
     let c = try decoder.container(keyedBy: RedditCommentCodingKeys.self)
     id = (try? c.decode(String.self, forKey: .id)) ?? UUID().uuidString
     author = (try? c.decode(String.self, forKey: .author)) ?? "[deleted]"
+    authorFlairText = Self.decodeAuthorFlairText(from: c)
     body = (try? c.decode(String.self, forKey: .body)) ?? ""
     ups = (try? c.decode(Int.self, forKey: .ups)) ?? 0
     score = (try? c.decode(Int.self, forKey: .score)) ?? 0
@@ -173,4 +177,39 @@ struct Comment: Identifiable, Decodable {
     }
     return nil
   }
+
+  private static func decodeAuthorFlairText(
+    from container: KeyedDecodingContainer<RedditCommentCodingKeys>
+  ) -> String? {
+    if let text = try? container.decode(String.self, forKey: .authorFlairText) {
+      let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+      if !normalized.isEmpty {
+        return normalized
+      }
+    }
+
+    guard
+      let richtext = try? container.decode(
+        [CommentFlairRichtextItemDTO].self,
+        forKey: .authorFlairRichtext)
+    else {
+      return nil
+    }
+
+    let joined = richtext.compactMap { item in
+      if let text = item.text {
+        return text
+      }
+      return item.a
+    }
+    .joined()
+    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    return joined.isEmpty ? nil : joined
+  }
+}
+
+private struct CommentFlairRichtextItemDTO: Decodable {
+  let text: String?
+  let a: String?
 }
