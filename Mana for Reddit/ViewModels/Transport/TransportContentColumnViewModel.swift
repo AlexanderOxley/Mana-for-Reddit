@@ -15,8 +15,9 @@ final class PostTransportViewModel {
     after = nil
   }
 
-  func fetch(sort: PostSort, timeRange: TimeRange) async throws -> [Post] {
+  func fetch(source: Source, sort: PostSort, timeRange: TimeRange) async throws -> [Post] {
     let result = try await TransportServices.fetchPosts(
+      source: source,
       sort: sort,
       timeRange: timeRange,
       after: after

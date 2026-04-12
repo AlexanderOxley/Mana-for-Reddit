@@ -161,7 +161,7 @@ struct ContentColumnView: View {
     .onAppear {
       selectedPost = detailViewModel.post
     }
-    .task {
+    .task(id: selectedFeed.id) {
       guard viewModel.posts.isEmpty else { return }
       await viewModel.load(refresh: true)
     }

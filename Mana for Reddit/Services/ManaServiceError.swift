@@ -1,13 +1,13 @@
 //
-//  RedditServiceError.swift
+//  ManaServiceError.swift
 //  Mana for Reddit
 //
-//  Created by Alexander Oxley on 11.04.2026.
+//  Created by Alexander Oxley on 12.04.2026.
 //
 
 import Foundation
 
-enum RedditServiceError: LocalizedError {
+enum ManaRedditServiceError: LocalizedError {
   case invalidResponse(Int)
   case unexpectedFormat
 

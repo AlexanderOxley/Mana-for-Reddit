@@ -7,16 +7,30 @@
 
 import Foundation
 
-struct Source: Identifiable, Hashable {
+struct Source: Identifiable, Hashable, Sendable {
   let id: String
   let title: String
   let icon: String
+  let listingPathPrefix: String
 
   static let frontPage = Source(
     id: "front-page",
     title: "Front Page",
-    icon: "house.fill"
+    icon: "house.fill",
+    listingPathPrefix: ""
   )
 
   static let defaults: [Source] = [.frontPage]
+
+  static func subreddit(_ name: String) -> Source {
+    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    let cleaned = trimmed.hasPrefix("r/") ? String(trimmed.dropFirst(2)) : trimmed
+    let normalized = cleaned.lowercased()
+    return Source(
+      id: "subreddit:\(normalized)",
+      title: "r/\(normalized)",
+      icon: "bubble.left.and.bubble.right.fill",
+      listingPathPrefix: "/r/\(normalized)"
+    )
+  }
 }

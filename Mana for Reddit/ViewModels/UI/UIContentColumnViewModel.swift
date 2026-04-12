@@ -53,7 +53,7 @@ final class ContentColumnViewModel: ObservableObject {
     }
 
     do {
-      let fetched = try await transport.fetch(sort: sort, timeRange: timeRange)
+      let fetched = try await transport.fetch(source: source, sort: sort, timeRange: timeRange)
 
       if isInitialLoad {
         posts = fetched

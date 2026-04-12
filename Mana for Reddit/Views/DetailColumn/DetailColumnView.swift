@@ -13,8 +13,9 @@ struct DetailColumnView: View {
   @EnvironmentObject private var contentViewModel: ContentColumnViewModel
 
   var body: some View {
+
     List(selection: $detailViewModel.selectedCommentID) {
-      Section {
+        Section {
         DetailHeaderSectionView(item: item)
       }
 
@@ -36,7 +37,6 @@ struct DetailColumnView: View {
         detailViewModel.toggleCollapse(for: id)
       }
     ])
-    .navigationTitle(detailViewModel.post?.title ?? item.title)
     .toolbar {
       #if os(macOS)
         ToolbarItemGroup(placement: .automatic) {
@@ -184,25 +184,4 @@ private struct DetailColumnLivePreviewHost: View {
 
 #Preview("Live Reddit") {
   DetailColumnLivePreviewHost()
-}
-
-#Preview("Sample") {
-  let detailViewModel = DetailColumnViewModel()
-  let contentViewModel = ContentColumnViewModel(source: .frontPage)
-  let samplePost = Post(
-    id: "1",
-    title: "Swift concurrency deep dive — actors, tasks, and async/await explained",
-    author: "swifter99",
-    subreddit: "swift",
-    score: 2048,
-    numComments: 87,
-    url: "https://example.com",
-    thumbnail: nil,
-    permalink: "/r/swift/comments/1"
-  )
-  NavigationStack {
-    DetailColumnView(item: samplePost)
-      .environmentObject(detailViewModel)
-      .environmentObject(contentViewModel)
-  }
 }

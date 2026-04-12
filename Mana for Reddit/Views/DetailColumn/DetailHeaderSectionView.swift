@@ -12,6 +12,9 @@ struct DetailHeaderSectionView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 8) {
+      Text(item.title)
+        .font(.headline)
+        .fixedSize(horizontal: false, vertical: true)
       Text("r/\(item.subreddit) · u/\(item.author)")
         .font(.caption)
         .foregroundStyle(.secondary)

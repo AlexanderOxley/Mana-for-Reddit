@@ -11,12 +11,14 @@ struct TransportServices {
   private static let userAgent = "ios:com.mana.reddit:v1.0 (by /u/mana-app)"
 
   static func fetchPosts(
+    source: Source = .frontPage,
     sort: PostSort = .best,
     timeRange: TimeRange = .today,
     after: String?,
     limit: Int = 25
   ) async throws -> (posts: [Post], after: String?) {
-    var components = URLComponents(string: "https://www.reddit.com\(sort.endpointPath)")
+    var components = URLComponents(
+      string: "https://www.reddit.com\(source.listingPathPrefix)\(sort.endpointPath)")
     var queryItems = [URLQueryItem(name: "limit", value: "\(limit)")]
     if sort.supportsTimeRange {
       queryItems.append(URLQueryItem(name: "t", value: timeRange.apiValue))
@@ -27,7 +29,7 @@ struct TransportServices {
     components?.queryItems = queryItems
 
     guard let url = components?.url else {
-      throw RedditServiceError.unexpectedFormat
+      throw ManaRedditServiceError.unexpectedFormat
     }
 
     var request = URLRequest(url: url)
@@ -36,10 +38,10 @@ struct TransportServices {
     let (data, response) = try await URLSession.shared.data(for: request)
 
     guard let http = response as? HTTPURLResponse else {
-      throw RedditServiceError.unexpectedFormat
+      throw ManaRedditServiceError.unexpectedFormat
     }
     guard http.statusCode == 200 else {
-      throw RedditServiceError.invalidResponse(http.statusCode)
+      throw ManaRedditServiceError.invalidResponse(http.statusCode)
     }
 
     let listing = try JSONDecoder().decode(PostListingDTO.self, from: data)
@@ -72,7 +74,7 @@ struct TransportServices {
     components?.queryItems = queryItems
 
     guard let url = components?.url else {
-      throw RedditServiceError.unexpectedFormat
+      throw ManaRedditServiceError.unexpectedFormat
     }
 
     var request = URLRequest(url: url)
@@ -81,14 +83,14 @@ struct TransportServices {
     let (data, response) = try await URLSession.shared.data(for: request)
 
     guard let http = response as? HTTPURLResponse else {
-      throw RedditServiceError.unexpectedFormat
+      throw ManaRedditServiceError.unexpectedFormat
     }
     guard http.statusCode == 200 else {
-      throw RedditServiceError.invalidResponse(http.statusCode)
+      throw ManaRedditServiceError.invalidResponse(http.statusCode)
     }
 
     let listings = try JSONDecoder().decode([CommentListingWrapper].self, from: data)
-    guard listings.count >= 2 else { throw RedditServiceError.unexpectedFormat }
+    guard listings.count >= 2 else { throw ManaRedditServiceError.unexpectedFormat }
     let comments = listings[1].data.children.compactMap { $0.kind == "t1" ? $0.comment : nil }
     return (comments, listings[1].data.after)
   }
