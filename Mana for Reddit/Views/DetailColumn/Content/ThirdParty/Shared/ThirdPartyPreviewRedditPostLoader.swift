@@ -164,7 +164,9 @@ struct ThirdPartyPreviewRedditPostLoader<Content: View>: View {
     if host.contains("redgifs.com") || host.contains("gfycat.com") || provider.contains("redgifs") {
       return .redgifs
     }
-    if host.contains("streamff.link") || provider.contains("streamff") {
+    if host.contains("streamff.com") || host.contains("streamff.link")
+      || provider.contains("streamff")
+    {
       return .streamff
     }
     if host.contains("vimeo.com") || provider.contains("vimeo") {
