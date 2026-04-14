@@ -10,7 +10,6 @@ import Foundation
 struct TransportServices {
   private static let userAgent = "ios:com.mana.reddit:v1.0 (by /u/mana-app)"
 
-  @MainActor
   static func fetchPosts(
     source: Source = .frontPage,
     sort: PostSort = .best,

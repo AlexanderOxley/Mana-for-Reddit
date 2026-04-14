@@ -60,6 +60,7 @@ final class DetailColumnViewModel: ObservableObject {
   }
 
   func setPost(_ post: Post?) {
+    guard self.post?.id != post?.id else { return }
     self.post = post
     reset()
   }

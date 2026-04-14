@@ -28,6 +28,7 @@ final class SidebarColumnViewModel: ObservableObject {
   }
 
   func select(_ item: Source?) {
+    guard selectedItem?.id != item?.id else { return }
     selectedItem = item
   }
 

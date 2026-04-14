@@ -34,6 +34,7 @@ final class ContentColumnViewModel: ObservableObject {
   }
 
   func setSource(_ source: Source) {
+    guard self.source.id != source.id else { return }
     self.source = source
     reset()
   }

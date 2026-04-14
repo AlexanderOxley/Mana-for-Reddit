@@ -90,7 +90,10 @@ struct SidebarColumnView: View {
     }
     .navigationTitle("Mana")
     .onChange(of: viewModel.searchText) { _, newValue in
-      viewModel.updateSearchQuery(newValue)
+      Task { @MainActor in
+        await Task.yield()
+        viewModel.updateSearchQuery(newValue)
+      }
     }
   }
 
@@ -98,8 +101,11 @@ struct SidebarColumnView: View {
     Binding(
       get: { viewModel.selectedItem },
       set: { selected in
-        viewModel.select(selected)
-        onSelect(selected)
+        Task { @MainActor in
+          await Task.yield()
+          viewModel.select(selected)
+          onSelect(selected)
+        }
       }
     )
   }
