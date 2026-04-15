@@ -11,27 +11,33 @@ struct DetailPostImageView: View {
   let imageURL: URL
 
   var body: some View {
-    AsyncImage(url: imageURL) { phase in
-      switch phase {
-      case .empty:
-        ProgressView()
-          .frame(maxWidth: .infinity, minHeight: 220)
-      case .success(let image):
-        image
-          .resizable()
-          .scaledToFit()
-          .frame(maxWidth: .infinity)
-          .clipShape(RoundedRectangle(cornerRadius: 10))
-      case .failure:
-        ContentUnavailableView(
-          "Image unavailable",
-          systemImage: "photo",
-          description: Text("The image could not be loaded.")
-        )
-      @unknown default:
-        EmptyView()
+    #if os(iOS)
+      DetailPostLiveTextImageIOSView(imageURL: imageURL)
+    #elseif os(macOS)
+      DetailPostLiveTextImageMacOSView(imageURL: imageURL)
+    #else
+      AsyncImage(url: imageURL) { phase in
+        switch phase {
+        case .empty:
+          ProgressView()
+            .frame(maxWidth: .infinity, minHeight: 220)
+        case .success(let image):
+          image
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        case .failure:
+          ContentUnavailableView(
+            "Image unavailable",
+            systemImage: "photo",
+            description: Text("The image could not be loaded.")
+          )
+        @unknown default:
+          EmptyView()
+        }
       }
-    }
+    #endif
   }
 }
 
