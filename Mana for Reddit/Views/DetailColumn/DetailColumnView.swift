@@ -10,11 +10,22 @@ import SwiftUI
 struct DetailColumnView: View {
   let item: Post
   @EnvironmentObject private var viewModel: DetailColumnViewModel
-  @EnvironmentObject private var contentViewModel: ContentColumnViewModel
   @State private var searchText = ""
 
+  private var selectedCommentBinding: Binding<String?> {
+    Binding(
+      get: { viewModel.selectedCommentID },
+      set: { selected in
+        Task { @MainActor in
+          await Task.yield()
+          viewModel.selectComment(selected)
+        }
+      }
+    )
+  }
+
   var body: some View {
-    List {
+    List(selection: selectedCommentBinding) {
       Section {
         DetailHeaderSectionView(item: item)
       }
@@ -29,8 +40,8 @@ struct DetailColumnView: View {
     }
     .listStyle(.plain)
     .navigationTitle("Comments")
-    .safeAreaInset(edge: .top) {
-      SortHeaderView(
+    .toolbar {
+      SortToolbarContent(
         title: "Comments",
         options: CommentSort.allCases,
         label: { $0.title },
@@ -48,14 +59,14 @@ struct DetailColumnView: View {
     .onChange(of: viewModel.sort) { _, _ in
       Task { @MainActor in
         await Task.yield()
-        await viewModel.refreshPostAndComments(using: contentViewModel, fallbackPost: item)
+        await viewModel.load(refresh: true)
       }
     }
     .onChange(of: viewModel.timeRange) { _, _ in
       guard viewModel.sort.supportsTimeRange else { return }
       Task { @MainActor in
         await Task.yield()
-        await viewModel.refreshPostAndComments(using: contentViewModel, fallbackPost: item)
+        await viewModel.load(refresh: true)
       }
     }
   }

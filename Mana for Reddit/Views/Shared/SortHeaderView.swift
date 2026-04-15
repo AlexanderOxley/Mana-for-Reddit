@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SortHeaderView<Option: Hashable>: View {
+struct SortToolbarContent<Option: Hashable>: ToolbarContent {
   let title: String
   let options: [Option]
   let label: (Option) -> String
@@ -15,33 +15,44 @@ struct SortHeaderView<Option: Hashable>: View {
   let showTimeRange: Bool
   @Binding var timeRange: TimeRange
 
-  var body: some View {
-    HStack(spacing: 12) {
-      Text(title)
-        .font(.caption)
-        .foregroundStyle(.secondary)
-
-      Spacer(minLength: 8)
-
-      Picker("Sort", selection: $selection) {
+  var body: some ToolbarContent {
+    ToolbarItemGroup(placement: .primaryAction) {
+      Menu {
         ForEach(options, id: \.self) { option in
-          Text(label(option)).tag(option)
-        }
-      }
-      .pickerStyle(.menu)
-
-      if showTimeRange {
-        Picker("Time", selection: $timeRange) {
-          ForEach(TimeRange.allCases, id: \.self) { range in
-            Text(range.title).tag(range)
+          Button {
+            selection = option
+          } label: {
+            if option == selection {
+              Label(label(option), systemImage: "checkmark")
+            } else {
+              Text(label(option))
+            }
           }
         }
-        .pickerStyle(.menu)
+      } label: {
+        Label(label(selection), systemImage: "arrow.up.arrow.down.circle")
+      }
+      .accessibilityLabel(title)
+
+      if showTimeRange {
+        Menu {
+          ForEach(TimeRange.allCases, id: \.self) { range in
+            Button {
+              timeRange = range
+            } label: {
+              if range == timeRange {
+                Label(range.title, systemImage: "checkmark")
+              } else {
+                Text(range.title)
+              }
+            }
+          }
+        } label: {
+          Label(timeRange.title, systemImage: "calendar")
+        }
+        .accessibilityLabel("Time range")
       }
     }
-    .padding(.horizontal)
-    .padding(.vertical, 8)
-    .background(.ultraThinMaterial)
   }
 }
 
@@ -49,12 +60,19 @@ struct SortHeaderView<Option: Hashable>: View {
   @Previewable @State var sort = PostSort.best
   @Previewable @State var timeRange = TimeRange.today
 
-  SortHeaderView(
-    title: "Posts",
-    options: PostSort.allCases,
-    label: { $0.title },
-    selection: $sort,
-    showTimeRange: true,
-    timeRange: $timeRange
-  )
+  NavigationStack {
+    Text("Sort Toolbar Preview")
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .toolbar {
+        SortToolbarContent(
+          title: "Posts",
+          options: PostSort.allCases,
+          label: { $0.title },
+          selection: $sort,
+          showTimeRange: true,
+          timeRange: $timeRange
+        )
+      }
+  }
+  .frame(width: 900, height: 600)
 }

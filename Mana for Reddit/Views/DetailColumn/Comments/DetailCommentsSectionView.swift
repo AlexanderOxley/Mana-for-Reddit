@@ -37,7 +37,11 @@ struct DetailCommentsSectionView: View {
           isCollapsed: viewModel.isCollapsed(comment.id),
           onToggleCollapse: { viewModel.toggleCollapse(for: comment.id) }
         )
+        .tag(comment.id)
         .id("\(comment.id)-\(viewModel.isCollapsed(comment.id))")
+        .onTapGesture {
+          viewModel.selectComment(comment.id)
+        }
         .onAppear {
           if comment.id == viewModel.visibleComments.last?.id {
             Task { @MainActor in

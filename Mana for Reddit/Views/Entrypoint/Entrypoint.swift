@@ -78,6 +78,22 @@ struct Entrypoint: View {
         focusedColumn = .content
         return .handled
       }
+      .onKeyPress(.return) {
+        collapseSelectedComment()
+        return .handled
+      }
+    }
+    .onReceive(NotificationCenter.default.publisher(for: AppCommand.focusSidebar)) { _ in
+      focusedColumn = .sidebar
+    }
+    .onReceive(NotificationCenter.default.publisher(for: AppCommand.focusFeed)) { _ in
+      focusedColumn = .content
+    }
+    .onReceive(NotificationCenter.default.publisher(for: AppCommand.focusPost)) { _ in
+      focusedColumn = .detail
+    }
+    .onReceive(NotificationCenter.default.publisher(for: AppCommand.collapseSelectedComment)) { _ in
+      collapseSelectedComment()
     }
     .environmentObject(sidebarViewModel)
     .environmentObject(contentViewModel)
@@ -87,6 +103,11 @@ struct Entrypoint: View {
         .frame(minWidth: 280)
     }
 
+  }
+
+  private func collapseSelectedComment() {
+    guard let selectedCommentID = detailViewModel.selectedCommentID else { return }
+    detailViewModel.toggleCollapse(for: selectedCommentID)
   }
 }
 

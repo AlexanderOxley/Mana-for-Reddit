@@ -23,6 +23,8 @@ final class DetailColumnViewModel: ObservableObject {
   @Published var hasMore = true
 
   private var transport = CommentTransportViewModel()
+  private var loadTask: Task<[Comment], Error>?
+  private var loadTaskID: UUID?
 
   var visibleComments: [Comment] {
     var visible: [Comment] = []
@@ -53,6 +55,11 @@ final class DetailColumnViewModel: ObservableObject {
     } else {
       collapsedCommentIDs.insert(commentID)
     }
+    ensureValidSelection()
+  }
+
+  func selectComment(_ commentID: String?) {
+    selectedCommentID = commentID
   }
 
   func isCollapsed(_ commentID: String) -> Bool {
@@ -61,6 +68,7 @@ final class DetailColumnViewModel: ObservableObject {
 
   func setPost(_ post: Post?) {
     guard self.post?.id != post?.id else { return }
+    cancelLoad()
     self.post = post
     reset()
   }
@@ -68,7 +76,7 @@ final class DetailColumnViewModel: ObservableObject {
   func load(refresh: Bool = false) async {
     guard let post else { return }
     if refresh {
-      guard !isLoading, !isLoadingMore else { return }
+      cancelLoad()
       reset()
     }
 
@@ -82,17 +90,33 @@ final class DetailColumnViewModel: ObservableObject {
       isLoadingMore = true
     }
 
+    let loadID = UUID()
+    loadTaskID = loadID
+
     defer {
-      isLoading = false
-      isLoadingMore = false
+      if loadTaskID == loadID {
+        loadTask = nil
+        loadTaskID = nil
+        isLoading = false
+        isLoadingMore = false
+      }
     }
 
     do {
-      let fetched = try await transport.fetch(
-        permalink: post.permalink,
-        sort: sort,
-        timeRange: timeRange
-      )
+      let permalink = post.permalink
+      let sort = sort
+      let timeRange = timeRange
+      let loadTask = Task { [transport] in
+        try await transport.fetch(
+          permalink: permalink,
+          sort: sort,
+          timeRange: timeRange
+        )
+      }
+      self.loadTask = loadTask
+
+      let fetched = try await loadTask.value
+      guard !Task.isCancelled else { return }
 
       if isInitialLoad {
         comments = fetched
@@ -101,8 +125,11 @@ final class DetailColumnViewModel: ObservableObject {
         comments.append(contentsOf: fetched.filter { !existingIDs.contains($0.id) })
       }
 
+      ensureValidSelection()
       hasMore = transport.after != nil
       errorMessage = nil
+    } catch is CancellationError {
+      return
     } catch {
       errorMessage = error.localizedDescription
       if isInitialLoad { hasMore = false }
@@ -124,6 +151,24 @@ final class DetailColumnViewModel: ObservableObject {
     }
 
     await load(refresh: true)
+  }
+
+  private func ensureValidSelection() {
+    let visibleIDs = Set(visibleComments.map(\.id))
+
+    if let selectedCommentID, visibleIDs.contains(selectedCommentID) {
+      return
+    }
+
+    selectedCommentID = visibleComments.first?.id
+  }
+
+  private func cancelLoad() {
+    loadTask?.cancel()
+    loadTask = nil
+    loadTaskID = nil
+    isLoading = false
+    isLoadingMore = false
   }
 
   private func reset() {

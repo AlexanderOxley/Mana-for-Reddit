@@ -27,6 +27,8 @@ final class ContentColumnViewModel: ObservableObject {
   var displayedPosts: [Post] { isSearchActive ? searchResults : posts }
 
   private var transport = PostTransportViewModel()
+  private var loadTask: Task<[Post], Error>?
+  private var loadTaskID: UUID?
   private var searchTask: Task<Void, Never>?
 
   init(source: Source) {
@@ -35,13 +37,14 @@ final class ContentColumnViewModel: ObservableObject {
 
   func setSource(_ source: Source) {
     guard self.source.id != source.id else { return }
+    cancelLoad()
     self.source = source
     reset()
   }
 
   func load(refresh: Bool = false) async {
     if refresh {
-      guard !isLoading, !isLoadingMore else { return }
+      cancelLoad()
       reset()
     }
 
@@ -55,13 +58,29 @@ final class ContentColumnViewModel: ObservableObject {
       isLoadingMore = true
     }
 
+    let loadID = UUID()
+    loadTaskID = loadID
+
     defer {
-      isLoading = false
-      isLoadingMore = false
+      if loadTaskID == loadID {
+        loadTask = nil
+        loadTaskID = nil
+        isLoading = false
+        isLoadingMore = false
+      }
     }
 
     do {
-      let fetched = try await transport.fetch(source: source, sort: sort, timeRange: timeRange)
+      let source = source
+      let sort = sort
+      let timeRange = timeRange
+      let loadTask = Task { [transport] in
+        try await transport.fetch(source: source, sort: sort, timeRange: timeRange)
+      }
+      self.loadTask = loadTask
+
+      let fetched = try await loadTask.value
+      guard !Task.isCancelled else { return }
 
       if isInitialLoad {
         posts = fetched
@@ -72,6 +91,8 @@ final class ContentColumnViewModel: ObservableObject {
 
       hasMore = transport.after != nil
       errorMessage = nil
+    } catch is CancellationError {
+      return
     } catch {
       errorMessage = error.localizedDescription
       if isInitialLoad { hasMore = false }
@@ -105,6 +126,14 @@ final class ContentColumnViewModel: ObservableObject {
       }
       isLoading = false
     }
+  }
+
+  private func cancelLoad() {
+    loadTask?.cancel()
+    loadTask = nil
+    loadTaskID = nil
+    isLoading = false
+    isLoadingMore = false
   }
 
   private func reset() {

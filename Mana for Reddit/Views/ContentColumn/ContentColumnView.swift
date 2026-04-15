@@ -12,18 +12,6 @@ struct ContentColumnView: View {
   @EnvironmentObject private var viewModel: ContentColumnViewModel
   @EnvironmentObject private var detailViewModel: DetailColumnViewModel
 
-  private var selectedPostBinding: Binding<Post?> {
-    Binding(
-      get: { detailViewModel.post },
-      set: { selected in
-        Task { @MainActor in
-          await Task.yield()
-          detailViewModel.setPost(selected)
-        }
-      }
-    )
-  }
-
   var body: some View {
     let displayedPosts = viewModel.displayedPosts
 
@@ -38,7 +26,17 @@ struct ContentColumnView: View {
           description: Text(error)
         )
       } else {
-        List(selection: selectedPostBinding) {
+        List(
+          selection: Binding(
+            get: { detailViewModel.post },
+            set: { selected in
+              Task { @MainActor in
+                await Task.yield()
+                detailViewModel.setPost(selected)
+              }
+            }
+          )
+        ) {
           ForEach(displayedPosts) { post in
             PostRowView(post: post)
               .tag(post)
@@ -68,8 +66,8 @@ struct ContentColumnView: View {
       }
     }
     .navigationTitle(selectedFeed.title)
-    .safeAreaInset(edge: .top) {
-      SortHeaderView(
+    .toolbar {
+      SortToolbarContent(
         title: "Posts",
         options: PostSort.allCases,
         label: { $0.title },
@@ -109,19 +107,26 @@ struct ContentColumnView: View {
   }
 }
 
-struct ContentColumnView_Previews: PreviewProvider {
-  static var previews: some View {
-    let contentViewModel = ContentColumnViewModel(source: .frontPage)
-    contentViewModel.posts = [
-      Post(id: "1", title: "Swift concurrency deep dive", author: "swifter", subreddit: "swift", score: 1024, numComments: 55, url: "https://example.com", thumbnail: nil, permalink: "/r/swift/1"),
-      Post(id: "2", title: "I built a Reddit client in SwiftUI", author: "alexo", subreddit: "iOSProgramming", score: 512, numComments: 33, url: "https://example.com", thumbnail: nil, permalink: "/r/iOSProgramming/2"),
+#Preview {
+  let contentViewModel: ContentColumnViewModel = {
+    let viewModel = ContentColumnViewModel(source: .frontPage)
+    viewModel.posts = [
+      Post(
+        id: "1", title: "Swift concurrency deep dive", author: "swifter", subreddit: "swift",
+        score: 1024, numComments: 55, url: "https://example.com", thumbnail: nil,
+        permalink: "/r/swift/1"),
+      Post(
+        id: "2", title: "I built a Reddit client in SwiftUI", author: "alexo",
+        subreddit: "iOSProgramming", score: 512, numComments: 33, url: "https://example.com",
+        thumbnail: nil, permalink: "/r/iOSProgramming/2"),
     ]
-    let detailViewModel = DetailColumnViewModel()
+    return viewModel
+  }()
+  let detailViewModel: DetailColumnViewModel = DetailColumnViewModel()
 
-    return NavigationStack {
-      ContentColumnView(selectedFeed: .frontPage)
-    }
-    .environmentObject(contentViewModel)
-    .environmentObject(detailViewModel)
+  return NavigationStack {
+    ContentColumnView(selectedFeed: .frontPage)
   }
+  .environmentObject(contentViewModel)
+  .environmentObject(detailViewModel)
 }

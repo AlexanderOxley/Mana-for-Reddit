@@ -125,6 +125,10 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
     previewImageURLStrings.compactMap { URL(string: Self.normalizedURLString($0)) }
   }
 
+  var thumbnailURL: URL? {
+    Self.normalizedMediaURL(from: thumbnail)
+  }
+
   var editedDate: Date? {
     guard let editedUTC else { return nil }
     return Date(timeIntervalSince1970: editedUTC)
@@ -201,10 +205,6 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
       return .image(imageURL)
     }
 
-    if let preview = previewImageURLs.first {
-      return .image(preview)
-    }
-
     let trimmedSelfText = selfText.trimmingCharacters(in: .whitespacesAndNewlines)
     if !trimmedSelfText.isEmpty {
       return .text(selfText)
@@ -245,6 +245,26 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
 
   private static func normalizedURLString(_ value: String) -> String {
     value.replacingOccurrences(of: "&amp;", with: "&")
+  }
+
+  private static func normalizedMediaURL(from value: String?) -> URL? {
+    guard let value else { return nil }
+
+    let normalized = normalizedURLString(value)
+    guard normalized.hasPrefix("http"), var components = URLComponents(string: normalized) else {
+      return nil
+    }
+
+    if components.scheme?.lowercased() == "http" {
+      components.scheme = "https"
+    }
+
+    return components.url
+  }
+
+  private static func isRedditPreviewURL(_ url: URL) -> Bool {
+    guard let host = url.host?.lowercased() else { return false }
+    return host == "preview.redd.it"
   }
 
   private static func detectThirdPartyProvider(url: URL, providerName: String?)
