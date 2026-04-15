@@ -11,6 +11,7 @@ struct Entrypoint: View {
   @StateObject private var sidebarViewModel = SidebarColumnViewModel()
   @StateObject private var contentViewModel = ContentColumnViewModel(source: .frontPage)
   @StateObject private var detailViewModel = DetailColumnViewModel()
+  @StateObject private var switcherViewModel = ContentSubredditSwitcherViewModel()
   @State private var isShowingInspector = false
 
   private enum Column: Hashable { case sidebar, content, detail }
@@ -84,13 +85,22 @@ struct Entrypoint: View {
       }
     }
     .onReceive(NotificationCenter.default.publisher(for: AppCommand.focusSidebar)) { _ in
-      focusedColumn = .sidebar
+      Task { @MainActor in
+        await Task.yield()
+        focusedColumn = .sidebar
+      }
     }
     .onReceive(NotificationCenter.default.publisher(for: AppCommand.focusFeed)) { _ in
-      focusedColumn = .content
+      Task { @MainActor in
+        await Task.yield()
+        focusedColumn = .content
+      }
     }
     .onReceive(NotificationCenter.default.publisher(for: AppCommand.focusPost)) { _ in
-      focusedColumn = .detail
+      Task { @MainActor in
+        await Task.yield()
+        focusedColumn = .detail
+      }
     }
     .onReceive(NotificationCenter.default.publisher(for: AppCommand.collapseSelectedComment)) { _ in
       collapseSelectedComment()
@@ -98,6 +108,12 @@ struct Entrypoint: View {
     .environmentObject(sidebarViewModel)
     .environmentObject(contentViewModel)
     .environmentObject(detailViewModel)
+    .environmentObject(switcherViewModel)
+    .overlay {
+      SubredditSwitcherOverlayView(viewModel: switcherViewModel) { source in
+        selectSwitcherSource(source)
+      }
+    }
     .inspector(isPresented: $isShowingInspector) {
       InspectorSettingsView(isShowingInspector: $isShowingInspector)
         .frame(minWidth: 280)
@@ -106,8 +122,22 @@ struct Entrypoint: View {
   }
 
   private func collapseSelectedComment() {
-    guard let selectedCommentID = detailViewModel.selectedCommentID else { return }
-    detailViewModel.toggleCollapse(for: selectedCommentID)
+    Task { @MainActor in
+      await Task.yield()
+      guard let selectedCommentID = detailViewModel.selectedCommentID else { return }
+      detailViewModel.toggleCollapse(for: selectedCommentID)
+    }
+  }
+
+  private func selectSwitcherSource(_ source: Source) {
+    if source.id == Source.frontPage.id {
+      sidebarViewModel.select(.frontPage)
+    } else {
+      sidebarViewModel.addAndSelectSubreddit(source)
+    }
+    switcherViewModel.rememberSelection(source)
+    detailViewModel.setPost(nil)
+    contentViewModel.setSource(source)
   }
 }
 

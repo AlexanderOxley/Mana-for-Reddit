@@ -12,15 +12,10 @@ import Foundation
 final class SidebarColumnViewModel: ObservableObject {
   @Published var items: [Source] = Source.defaults
   @Published var selectedItem: Source? = .frontPage
-  @Published var searchText = ""
-  @Published var searchResults: [Source] = []
-  @Published var isSearching = false
 
   private let maxRecentSubreddits = 10
   private let recentSubredditsKey = "sidebar.recentSubreddits"
   private var recentSubreddits: [Source] = []
-  private let transport = SidebarTransportViewModel()
-  private var searchTask: Task<Void, Never>?
 
   init() {
     loadRecentSubreddits()
@@ -30,31 +25,6 @@ final class SidebarColumnViewModel: ObservableObject {
   func select(_ item: Source?) {
     guard selectedItem?.id != item?.id else { return }
     selectedItem = item
-  }
-
-  func updateSearchQuery(_ query: String) {
-    searchTask?.cancel()
-    let trimmed = query.trimmingCharacters(in: .whitespacesAndNewlines)
-
-    guard !trimmed.isEmpty else {
-      searchResults = []
-      isSearching = false
-      return
-    }
-
-    searchTask = Task {
-      isSearching = true
-      do {
-        try await Task.sleep(nanoseconds: 250_000_000)
-        let results = try await transport.searchSubreddits(query: trimmed)
-        guard !Task.isCancelled else { return }
-        searchResults = deduplicated(results)
-      } catch {
-        if Task.isCancelled { return }
-        searchResults = []
-      }
-      isSearching = false
-    }
   }
 
   func addAndSelectSubreddit(_ source: Source) {
@@ -72,20 +42,10 @@ final class SidebarColumnViewModel: ObservableObject {
     persistRecentSubreddits()
     rebuildItems()
     selectedItem = source
-    searchText = ""
-    searchResults = []
   }
 
-  var recentSuggestions: [Source] {
-    let trimmed = searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-    guard !trimmed.isEmpty else { return recentSubreddits }
-    return recentSubreddits.filter { $0.title.lowercased().contains(trimmed) }
-  }
-
-  func clearAllRecents() {
-    recentSubreddits = []
-    persistRecentSubreddits()
-    rebuildItems()
+  var recents: [Source] {
+    recentSubreddits
   }
 
   func removeSubreddit(_ source: Source) {
@@ -100,15 +60,6 @@ final class SidebarColumnViewModel: ObservableObject {
 
   private func rebuildItems() {
     items = [Source.frontPage] + recentSubreddits
-  }
-
-  private func deduplicated(_ sources: [Source]) -> [Source] {
-    var seen = Set<String>()
-    return sources.filter { source in
-      if seen.contains(source.id) { return false }
-      seen.insert(source.id)
-      return true
-    }
   }
 
   private func loadRecentSubreddits() {

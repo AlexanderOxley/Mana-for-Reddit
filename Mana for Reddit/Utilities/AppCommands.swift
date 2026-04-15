@@ -11,5 +11,6 @@ enum AppCommand {
   static let focusSidebar = Notification.Name("AppCommand.focusSidebar")
   static let focusFeed = Notification.Name("AppCommand.focusFeed")
   static let focusPost = Notification.Name("AppCommand.focusPost")
+  static let openSubredditSwitcher = Notification.Name("AppCommand.openSubredditSwitcher")
   static let collapseSelectedComment = Notification.Name("AppCommand.collapseSelectedComment")
 }

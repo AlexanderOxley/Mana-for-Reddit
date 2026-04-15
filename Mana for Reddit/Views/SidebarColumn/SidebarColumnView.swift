@@ -9,90 +9,38 @@ import SwiftUI
 
 struct SidebarColumnView: View {
   @EnvironmentObject private var viewModel: SidebarColumnViewModel
+  @EnvironmentObject private var switcherViewModel: ContentSubredditSwitcherViewModel
 
   let onSelect: (Source?) -> Void
 
   var body: some View {
     List(selection: selectionBinding) {
-      Section {
-        HStack(spacing: 8) {
-          Image(systemName: "magnifyingglass")
-            .foregroundStyle(.secondary)
-          TextField("Find a subreddit", text: $viewModel.searchText)
-            .autocorrectionDisabled()
-          if !viewModel.searchText.isEmpty {
-            Button {
-              viewModel.searchText = ""
-              viewModel.updateSearchQuery("")
-            } label: {
-              Image(systemName: "xmark.circle.fill")
-                .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
+      #if os(iOS)
+        Section {
+          Button("Search") {
+            switcherViewModel.present()
           }
         }
+      #endif
+
+      Section("General") {
+        Label(Source.frontPage.title, systemImage: Source.frontPage.icon)
+          .tag(Source.frontPage)
       }
 
-      Section("Feeds") {
-        ForEach(viewModel.items) { item in
+      Section("Recents") {
+        ForEach(viewModel.recents) { item in
           Label(item.title, systemImage: item.icon)
             .tag(item)
             .contextMenu {
-              if item.id != Source.frontPage.id {
-                Button(role: .destructive) {
-                  viewModel.removeSubreddit(item)
-                  onSelect(viewModel.selectedItem)
-                } label: {
-                  Label("Remove", systemImage: "trash")
-                }
+              Button(role: .destructive) {
+                viewModel.removeSubreddit(item)
+                onSelect(viewModel.selectedItem)
+              } label: {
+                Label("Remove", systemImage: "trash")
               }
             }
         }
-      }
-
-      if viewModel.isSearching {
-        Section {
-          Text("Searching…")
-            .foregroundStyle(.secondary)
-        }
-      }
-
-      if !viewModel.recentSuggestions.isEmpty {
-        Section("Recent") {
-          ForEach(viewModel.recentSuggestions) { source in
-            Button {
-              viewModel.addAndSelectSubreddit(source)
-              onSelect(source)
-            } label: {
-              Label(source.title, systemImage: "clock")
-            }
-          }
-
-          Button("Clear Recent") {
-            viewModel.clearAllRecents()
-          }
-          .font(.caption)
-        }
-      }
-
-      if !viewModel.searchResults.isEmpty {
-        Section("Reddit") {
-          ForEach(viewModel.searchResults) { source in
-            Button {
-              viewModel.addAndSelectSubreddit(source)
-              onSelect(source)
-            } label: {
-              Label(source.title, systemImage: source.icon)
-            }
-          }
-        }
-      }
-    }
-    .navigationTitle("Mana")
-    .onChange(of: viewModel.searchText) { _, newValue in
-      Task { @MainActor in
-        await Task.yield()
-        viewModel.updateSearchQuery(newValue)
       }
     }
   }

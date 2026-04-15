@@ -10,7 +10,6 @@ import SwiftUI
 struct DetailColumnView: View {
   let item: Post
   @EnvironmentObject private var viewModel: DetailColumnViewModel
-  @State private var searchText = ""
 
   private var selectedCommentBinding: Binding<String?> {
     Binding(
@@ -35,7 +34,7 @@ struct DetailColumnView: View {
       }
 
       Section("Comments") {
-        DetailCommentsSectionView(searchText: $searchText)
+        DetailCommentsSectionView()
       }
     }
     .listStyle(.plain)

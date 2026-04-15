@@ -26,6 +26,11 @@ struct Mana_for_RedditApp: App {
           NotificationCenter.default.post(name: AppCommand.focusFeed, object: nil)
         }
         .keyboardShortcut("2", modifiers: [.command])
+
+        Button("Switch Subreddit") {
+          NotificationCenter.default.post(name: AppCommand.openSubredditSwitcher, object: nil)
+        }
+        .keyboardShortcut("f", modifiers: [.command])
       }
 
       CommandMenu("Post") {
