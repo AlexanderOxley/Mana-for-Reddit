@@ -8,13 +8,36 @@
 import AVKit
 import SwiftUI
 
+#if os(macOS)
+  struct NativeVideoPlayer: NSViewRepresentable {
+    let player: AVPlayer
+
+    func makeNSView(context: Context) -> AVPlayerView {
+      let view = AVPlayerView()
+      view.player = player
+      view.controlsStyle = .inline
+      return view
+    }
+
+    func updateNSView(_ nsView: AVPlayerView, context: Context) {
+      nsView.player = player
+    }
+  }
+#endif
+
 struct DetailPostVideoView: View {
   let videoURL: URL
 
   var body: some View {
-    VideoPlayer(player: AVPlayer(url: videoURL))
-      .frame(minHeight: 240)
-      .clipShape(RoundedRectangle(cornerRadius: 10))
+    #if os(macOS)
+      NativeVideoPlayer(player: AVPlayer(url: videoURL))
+        .frame(minHeight: 240)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    #else
+      VideoPlayer(player: AVPlayer(url: videoURL))
+        .frame(minHeight: 240)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    #endif
   }
 }
 

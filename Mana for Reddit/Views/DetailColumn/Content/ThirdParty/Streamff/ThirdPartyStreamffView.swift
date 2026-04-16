@@ -26,9 +26,15 @@ struct ThirdPartyStreamffView: View {
       }
 
       if let directVideoURL = viewModel.directVideoURL {
-        VideoPlayer(player: AVPlayer(url: directVideoURL))
-          .frame(minHeight: 360)
-          .clipShape(RoundedRectangle(cornerRadius: 10))
+        #if os(macOS)
+          NativeVideoPlayer(player: AVPlayer(url: directVideoURL))
+            .frame(minHeight: 360)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        #else
+          VideoPlayer(player: AVPlayer(url: directVideoURL))
+            .frame(minHeight: 360)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+        #endif
       } else {
         #if os(iOS)
           EmbeddedStreamffiOS(url: viewModel.pageURL)
