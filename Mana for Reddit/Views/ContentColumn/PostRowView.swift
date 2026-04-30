@@ -53,6 +53,10 @@ struct PostRowView: View {
             .foregroundStyle(.tertiary)
         }
 
+        if !post.flairSegments.isEmpty {
+          PostBadgesView(post: post)
+        }
+
         HStack(spacing: 12) {
           Label("\(post.score)", systemImage: "arrow.up")
           Label("\(post.numComments)", systemImage: "bubble.right")

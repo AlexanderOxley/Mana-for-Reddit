@@ -7,10 +7,28 @@
 
 import Foundation
 
+enum CommentFlairSegment: Hashable {
+  case text(String)
+  case emoji(url: URL, fallback: String)
+}
+
 struct Comment: Identifiable, Decodable {
   let id: String
   let author: String
   let authorFlairText: String?
+  private let authorFlairSegmentsStored: [CommentFlairSegment]
+
+  var authorFlairSegments: [CommentFlairSegment] {
+    if !authorFlairSegmentsStored.isEmpty {
+      return authorFlairSegmentsStored
+    }
+    if let text = authorFlairText,
+      !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    {
+      return [.text(text)]
+    }
+    return []
+  }
   let body: String
   let ups: Int
   let score: Int
@@ -78,6 +96,7 @@ struct Comment: Identifiable, Decodable {
     id: String,
     author: String,
     authorFlairText: String? = nil,
+    authorFlairSegments: [CommentFlairSegment] = [],
     body: String,
     ups: Int = 0,
     score: Int,
@@ -96,6 +115,7 @@ struct Comment: Identifiable, Decodable {
     self.id = id
     self.author = author
     self.authorFlairText = authorFlairText
+    self.authorFlairSegmentsStored = authorFlairSegments
     self.body = body
     self.ups = ups
     self.score = score
@@ -118,6 +138,7 @@ struct Comment: Identifiable, Decodable {
     id = (try? c.decode(String.self, forKey: .id)) ?? UUID().uuidString
     author = (try? c.decode(String.self, forKey: .author)) ?? "[deleted]"
     authorFlairText = Self.decodeAuthorFlairText(from: c)
+    authorFlairSegmentsStored = Self.decodeAuthorFlairSegments(from: c)
     body = (try? c.decode(String.self, forKey: .body)) ?? ""
     ups = (try? c.decode(Int.self, forKey: .ups)) ?? 0
     score = (try? c.decode(Int.self, forKey: .score)) ?? 0
@@ -160,29 +181,45 @@ struct Comment: Identifiable, Decodable {
         return normalized
       }
     }
+    return nil
+  }
 
+  private static func decodeAuthorFlairSegments(
+    from container: KeyedDecodingContainer<RedditCommentCodingKeys>
+  ) -> [CommentFlairSegment] {
     guard
       let richtext = try? container.decode(
         [CommentFlairRichtextItemDTO].self,
         forKey: .authorFlairRichtext)
     else {
+      return []
+    }
+
+    return richtext.compactMap { item in
+      if item.kind == "text", let text = item.text, !text.isEmpty {
+        return .text(text)
+      }
+      if item.kind == "emoji",
+        let urlString = item.url,
+        let url = URL(string: urlString)
+      {
+        return .emoji(url: url, fallback: item.a ?? "")
+      }
       return nil
     }
-
-    let joined = richtext.compactMap { item in
-      if let text = item.text {
-        return text
-      }
-      return item.a
-    }
-    .joined()
-    .trimmingCharacters(in: .whitespacesAndNewlines)
-
-    return joined.isEmpty ? nil : joined
   }
 }
 
 private struct CommentFlairRichtextItemDTO: Decodable {
+  let kind: String
   let text: String?
   let a: String?
+  let url: String?
+
+  enum CodingKeys: String, CodingKey {
+    case kind = "e"
+    case text = "t"
+    case a
+    case url = "u"
+  }
 }

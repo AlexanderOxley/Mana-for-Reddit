@@ -11,7 +11,6 @@ enum PostContentIntent {
   case gallery([URL])
   case video(URL)
   case image(URL)
-  case text(String)
   case thirdParty(ThirdPartyEmbed)
   case externalLink(URL)
   case none
@@ -203,11 +202,6 @@ struct Post: Identifiable, Decodable, Hashable, Equatable {
 
     if let imageURL {
       return .image(imageURL)
-    }
-
-    let trimmedSelfText = selfText.trimmingCharacters(in: .whitespacesAndNewlines)
-    if !trimmedSelfText.isEmpty {
-      return .text(selfText)
     }
 
     if let thirdPartyEmbed {

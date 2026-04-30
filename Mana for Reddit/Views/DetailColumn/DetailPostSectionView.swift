@@ -10,6 +10,11 @@ import SwiftUI
 struct DetailPostSectionView: View {
   let item: Post
 
+  private var trimmedSelfText: String? {
+    let t = item.selfText.trimmingCharacters(in: .whitespacesAndNewlines)
+    return t.isEmpty ? nil : t
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       switch item.contentIntent {
@@ -19,15 +24,19 @@ struct DetailPostSectionView: View {
         DetailPostVideoView(videoURL: videoURL)
       case .image(let imageURL):
         DetailPostImageView(imageURL: imageURL)
-      case .text(let selfText):
-        MarkdownTextView(markdown: selfText, font: .body)
       case .thirdParty(let embed):
         ThirdPartyEmbedContainerView(embed: embed)
       case .externalLink(let externalURL):
         DetailExternalLinkButton(externalURL: externalURL)
       case .none:
-        Text("No post body available.")
-          .foregroundStyle(.secondary)
+        if trimmedSelfText == nil {
+          Text("No post body available.")
+            .foregroundStyle(.secondary)
+        }
+      }
+
+      if let selfText = trimmedSelfText {
+        MarkdownTextView(markdown: selfText, font: .body)
       }
     }
   }

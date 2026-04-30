@@ -59,14 +59,37 @@ struct CommentRowView: View {
           Text(comment.author)
             .font(.caption)
             .fontWeight(.semibold)
-          if let authorFlairText = comment.authorFlairText,
-            !authorFlairText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-          {
-            Text(authorFlairText)
-              .font(.caption2)
-              .padding(.horizontal, 6)
-              .padding(.vertical, 2)
-              .background(.quaternary, in: Capsule())
+          if !comment.authorFlairSegments.isEmpty {
+            HStack(spacing: 4) {
+              ForEach(
+                Array(comment.authorFlairSegments.enumerated()), id: \.offset
+              ) { _, segment in
+                switch segment {
+                case .text(let value):
+                  Text(value)
+                    .font(.caption2)
+                case .emoji(let url, let fallback):
+                  AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                      image.resizable().scaledToFit()
+                    case .failure:
+                      Text(fallback.isEmpty ? "🙂" : fallback)
+                        .font(.caption2)
+                    case .empty:
+                      ProgressView()
+                    @unknown default:
+                      Text(fallback.isEmpty ? "🙂" : fallback)
+                        .font(.caption2)
+                    }
+                  }
+                  .frame(width: 14, height: 14)
+                }
+              }
+            }
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(.quaternary, in: Capsule())
           }
           if let relativeAge = comment.relativeCreatedDescription {
             Text(relativeAge)
