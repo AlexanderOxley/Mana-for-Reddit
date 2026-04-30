@@ -33,6 +33,15 @@ struct Entrypoint: View {
             Label("Settings", systemImage: "gearshape")
           }
         }
+
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            reloadSidebar()
+          } label: {
+            Label("Reload sidebar", systemImage: "arrow.clockwise")
+          }
+          .accessibilityLabel("Reload sidebar")
+        }
       }
       .focused($focusedColumn, equals: .sidebar)
       .onKeyPress(.rightArrow) {
@@ -138,6 +147,20 @@ struct Entrypoint: View {
     switcherViewModel.rememberSelection(source)
     detailViewModel.setPost(nil)
     contentViewModel.setSource(source)
+  }
+
+  private func reloadSidebar() {
+    let previousSelectionID = sidebarViewModel.selectedItem?.id
+
+    sidebarViewModel.reload()
+
+    guard let selectedSource = sidebarViewModel.selectedItem else { return }
+
+    if previousSelectionID != selectedSource.id {
+      detailViewModel.setPost(nil)
+    }
+
+    contentViewModel.setSource(selectedSource)
   }
 }
 

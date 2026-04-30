@@ -56,43 +56,48 @@ struct TransportServices {
     after: String?,
     limit: Int = 200
   ) async throws -> (comments: [Comment], after: String?) {
-    let path = permalink.hasSuffix("/") ? permalink : permalink + "/"
+    let result = try await fetchPostAndComments(
+      permalink: permalink,
+      sort: sort,
+      timeRange: timeRange,
+      after: after,
+      limit: limit
+    )
+    return (result.comments, result.after)
+  }
 
-    var components = URLComponents(string: "https://www.reddit.com\(path).json")
-    var queryItems = [
-      URLQueryItem(name: "limit", value: "\(limit)"),
-      URLQueryItem(name: "depth", value: "10"),
-      URLQueryItem(name: "raw_json", value: "1"),
-      URLQueryItem(name: "sort", value: sort.apiValue),
-    ]
-    if sort.supportsTimeRange {
-      queryItems.append(URLQueryItem(name: "t", value: timeRange.apiValue))
-    }
-    if let after {
-      queryItems.append(URLQueryItem(name: "after", value: after))
-    }
-    components?.queryItems = queryItems
+  static func fetchPostAndComments(
+    permalink: String,
+    sort: CommentSort = .best,
+    timeRange: TimeRange = .today,
+    after: String?,
+    limit: Int = 200
+  ) async throws -> (post: Post?, comments: [Comment], after: String?) {
+    let data = try await fetchCommentThreadData(
+      permalink: permalink,
+      sort: sort,
+      timeRange: timeRange,
+      after: after,
+      limit: limit
+    )
 
-    guard let url = components?.url else {
+    guard
+      let payload = try JSONSerialization.jsonObject(with: data) as? [Any],
+      payload.count >= 2
+    else {
       throw ManaRedditServiceError.unexpectedFormat
     }
 
-    var request = URLRequest(url: url)
-    request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+    let postListingData = try JSONSerialization.data(withJSONObject: payload[0])
+    let commentListingData = try JSONSerialization.data(withJSONObject: payload[1])
 
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let postListing = try JSONDecoder().decode(PostListingDTO.self, from: postListingData)
+    let commentListing = try JSONDecoder().decode(
+      CommentListingWrapper.self, from: commentListingData)
 
-    guard let http = response as? HTTPURLResponse else {
-      throw ManaRedditServiceError.unexpectedFormat
-    }
-    guard http.statusCode == 200 else {
-      throw ManaRedditServiceError.invalidResponse(http.statusCode)
-    }
-
-    let listings = try JSONDecoder().decode([CommentListingWrapper].self, from: data)
-    guard listings.count >= 2 else { throw ManaRedditServiceError.unexpectedFormat }
-    let comments = listings[1].data.children.compactMap { $0.kind == "t1" ? $0.comment : nil }
-    return (comments, listings[1].data.after)
+    let post = postListing.data.children.first?.data
+    let comments = commentListing.data.children.compactMap { $0.kind == "t1" ? $0.comment : nil }
+    return (post, comments, commentListing.data.after)
   }
 
   static func searchPosts(
@@ -138,5 +143,48 @@ struct TransportServices {
     let listing = try JSONDecoder().decode(PostListingDTO.self, from: data)
     let posts = listing.data.children.map { $0.data }
     return (posts, listing.data.after)
+  }
+
+  private static func fetchCommentThreadData(
+    permalink: String,
+    sort: CommentSort,
+    timeRange: TimeRange,
+    after: String?,
+    limit: Int
+  ) async throws -> Data {
+    let path = permalink.hasSuffix("/") ? permalink : permalink + "/"
+
+    var components = URLComponents(string: "https://www.reddit.com\(path).json")
+    var queryItems = [
+      URLQueryItem(name: "limit", value: "\(limit)"),
+      URLQueryItem(name: "depth", value: "10"),
+      URLQueryItem(name: "raw_json", value: "1"),
+      URLQueryItem(name: "sort", value: sort.apiValue),
+    ]
+    if sort.supportsTimeRange {
+      queryItems.append(URLQueryItem(name: "t", value: timeRange.apiValue))
+    }
+    if let after {
+      queryItems.append(URLQueryItem(name: "after", value: after))
+    }
+    components?.queryItems = queryItems
+
+    guard let url = components?.url else {
+      throw ManaRedditServiceError.unexpectedFormat
+    }
+
+    var request = URLRequest(url: url)
+    request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
+
+    let (data, response) = try await URLSession.shared.data(for: request)
+
+    guard let http = response as? HTTPURLResponse else {
+      throw ManaRedditServiceError.unexpectedFormat
+    }
+    guard http.statusCode == 200 else {
+      throw ManaRedditServiceError.invalidResponse(http.statusCode)
+    }
+
+    return data
   }
 }

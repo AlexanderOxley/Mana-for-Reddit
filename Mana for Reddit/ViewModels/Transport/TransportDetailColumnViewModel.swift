@@ -30,6 +30,24 @@ final class CommentTransportViewModel {
     return flattenComments(result.comments)
   }
 
+  func refreshThread(
+    permalink: String,
+    sort: CommentSort,
+    timeRange: TimeRange
+  ) async throws -> (post: Post?, comments: [Comment]) {
+    reset()
+
+    let result = try await TransportServices.fetchPostAndComments(
+      permalink: permalink,
+      sort: sort,
+      timeRange: timeRange,
+      after: nil
+    )
+
+    after = result.after
+    return (result.post, flattenComments(result.comments))
+  }
+
   private func flattenComments(_ roots: [Comment]) -> [Comment] {
     var result: [Comment] = []
 

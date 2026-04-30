@@ -153,6 +153,44 @@ final class DetailColumnViewModel: ObservableObject {
     await load(refresh: true)
   }
 
+  func reloadCurrentPostAndComments(fallbackPost: Post) async {
+    let currentPost = post ?? fallbackPost
+
+    cancelLoad()
+    reset()
+    isLoading = true
+
+    defer {
+      isLoading = false
+      isLoadingMore = false
+    }
+
+    do {
+      let refreshedThread = try await transport.refreshThread(
+        permalink: currentPost.permalink,
+        sort: sort,
+        timeRange: timeRange
+      )
+
+      if let refreshedPost = refreshedThread.post {
+        post = refreshedPost
+      } else {
+        post = currentPost
+      }
+
+      comments = refreshedThread.comments
+      hasMore = transport.after != nil
+      errorMessage = nil
+      ensureValidSelection()
+    } catch is CancellationError {
+      post = currentPost
+    } catch {
+      post = currentPost
+      errorMessage = error.localizedDescription
+      hasMore = false
+    }
+  }
+
   private func ensureValidSelection() {
     let visibleIDs = Set(visibleComments.map(\.id))
 

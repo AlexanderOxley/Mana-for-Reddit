@@ -13,45 +13,47 @@ struct DetailCommentsSectionView: View {
   var body: some View {
     let visibleComments = viewModel.visibleComments
 
-    if viewModel.isLoading {
-      ProgressView("Loading comments…")
-        .frame(maxWidth: .infinity)
-    } else if let error = viewModel.errorMessage {
-      Text(error)
-        .foregroundStyle(.secondary)
-    } else if viewModel.comments.isEmpty {
-      Text("No comments yet.")
-        .foregroundStyle(.secondary)
-    } else {
-      ForEach(visibleComments) { comment in
-        CommentRowView(
-          comment: comment,
-          isCollapsed: viewModel.isCollapsed(comment.id),
-          onToggleCollapse: { viewModel.toggleCollapse(for: comment.id) }
-        )
-        .tag(comment.id)
-        .id("\(comment.id)-\(viewModel.isCollapsed(comment.id))")
-        .onTapGesture {
-          viewModel.selectComment(comment.id)
-        }
-        .onAppear {
-          if comment.id == viewModel.visibleComments.last?.id {
-            Task { @MainActor in
-              await Task.yield()
-              await viewModel.load()
+    VStack(alignment: .leading, spacing: 12) {
+
+      if viewModel.isLoading {
+        ProgressView("Loading comments…")
+          .frame(maxWidth: .infinity)
+      } else if let error = viewModel.errorMessage {
+        Text(error)
+          .foregroundStyle(.secondary)
+      } else if viewModel.comments.isEmpty {
+        Text("No comments yet.")
+          .foregroundStyle(.secondary)
+      } else {
+        ForEach(visibleComments) { comment in
+          CommentRowView(
+            comment: comment,
+            isCollapsed: viewModel.isCollapsed(comment.id),
+            isSelected: viewModel.selectedCommentID == comment.id,
+            onSelect: { viewModel.selectComment(comment.id) },
+            onToggleCollapse: { viewModel.toggleCollapse(for: comment.id) }
+          )
+          .id("\(comment.id)-\(viewModel.isCollapsed(comment.id))")
+          .onAppear {
+            if comment.id == viewModel.visibleComments.last?.id {
+              Task { @MainActor in
+                await Task.yield()
+                await viewModel.load()
+              }
             }
           }
         }
-      }
 
-      if viewModel.isLoadingMore {
-        HStack {
-          Spacer()
-          ProgressView("Loading more…")
-          Spacer()
+        if viewModel.isLoadingMore {
+          HStack {
+            Spacer()
+            ProgressView("Loading more…")
+            Spacer()
+          }
         }
       }
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 
@@ -79,10 +81,8 @@ struct DetailCommentsSectionView: View {
     return vm
   }()
 
-  List {
-    Section("Comments") {
-      DetailCommentsSectionView()
-    }
-  }
+    
+    DetailCommentsSectionView()
+
   .environmentObject(vm)
 }

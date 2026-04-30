@@ -10,6 +10,8 @@ import SwiftUI
 struct CommentRowView: View {
   let comment: Comment
   let isCollapsed: Bool
+  let isSelected: Bool
+  let onSelect: () -> Void
   let onToggleCollapse: () -> Void
 
   private var metaBadges: [String] {
@@ -94,8 +96,12 @@ struct CommentRowView: View {
       }
     }
     .padding(.leading, CGFloat(comment.depth) * 12)
+    .padding(.horizontal, 12)
     .padding(.vertical, 4)
+    .background(isSelected ? Color.accentColor.opacity(0.14) : Color.clear)
+    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     .contentShape(Rectangle())
+    .onTapGesture(perform: onSelect)
     .onTapGesture(count: 2, perform: onToggleCollapse)
   }
 }
@@ -121,6 +127,8 @@ struct CommentRowView: View {
       createdUTC: Date().addingTimeInterval(-3200).timeIntervalSince1970
     ),
     isCollapsed: false,
+    isSelected: false,
+    onSelect: {},
     onToggleCollapse: {}
   )
   .padding()
@@ -147,6 +155,8 @@ struct CommentRowView: View {
       createdUTC: Date().addingTimeInterval(-7200).timeIntervalSince1970
     ),
     isCollapsed: true,
+    isSelected: false,
+    onSelect: {},
     onToggleCollapse: {}
   )
   .padding()
@@ -173,6 +183,8 @@ struct CommentRowView: View {
       createdUTC: Date().addingTimeInterval(-18000).timeIntervalSince1970
     ),
     isCollapsed: false,
+    isSelected: false,
+    onSelect: {},
     onToggleCollapse: {}
   )
   .padding()
@@ -200,6 +212,8 @@ struct CommentRowView: View {
       createdUTC: Date().addingTimeInterval(-5000).timeIntervalSince1970
     ),
     isCollapsed: false,
+    isSelected: false,
+    onSelect: {},
     onToggleCollapse: {}
   )
   .padding()
@@ -226,6 +240,8 @@ struct CommentRowView: View {
       createdUTC: Date().addingTimeInterval(-8600).timeIntervalSince1970
     ),
     isCollapsed: false,
+    isSelected: false,
+    onSelect: {},
     onToggleCollapse: {}
   )
   .padding()
@@ -251,6 +267,8 @@ struct CommentRowView: View {
       replies: []
     ),
     isCollapsed: false,
+    isSelected: false,
+    onSelect: {},
     onToggleCollapse: {}
   )
   .padding()
@@ -276,6 +294,8 @@ struct CommentRowView: View {
       replies: []
     ),
     isCollapsed: false,
+    isSelected: false,
+    onSelect: {},
     onToggleCollapse: {}
   )
   .padding()

@@ -24,6 +24,15 @@ struct ContentColumnView: View {
           }
         }
 
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            reloadFeed()
+          } label: {
+            Label("Reload feed", systemImage: "arrow.clockwise")
+          }
+          .accessibilityLabel("Reload feed")
+        }
+
         SortToolbarContent(
           title: "Posts",
           options: PostSort.allCases,
@@ -118,9 +127,11 @@ struct ContentColumnView: View {
           }
         }
         .listStyle(.plain)
-        .refreshable {
-          await viewModel.load(refresh: true)
-        }
+        #if os(iOS)
+          .refreshable {
+            await viewModel.load(refresh: true)
+          }
+        #endif
       }
     }
   }
@@ -135,6 +146,13 @@ struct ContentColumnView: View {
         }
       }
     )
+  }
+
+  private func reloadFeed() {
+    Task { @MainActor in
+      await Task.yield()
+      await viewModel.load(refresh: true)
+    }
   }
 
 }

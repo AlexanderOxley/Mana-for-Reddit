@@ -10,36 +10,60 @@ import SwiftUI
 struct DetailColumnView: View {
   let item: Post
   @EnvironmentObject private var viewModel: DetailColumnViewModel
+  @Environment(\.openURL) private var openURL
 
-  private var selectedCommentBinding: Binding<String?> {
-    Binding(
-      get: { viewModel.selectedCommentID },
-      set: { selected in
-        Task { @MainActor in
-          await Task.yield()
-          viewModel.selectComment(selected)
-        }
-      }
-    )
+  private var currentPost: Post {
+    viewModel.post ?? item
+  }
+
+  private var shareURL: URL? {
+    URL(string: "https://www.reddit.com\(currentPost.permalink)")
   }
 
   var body: some View {
-    List(selection: selectedCommentBinding) {
-      Section {
-        DetailHeaderSectionView(item: item)
-      }
-
-      Section("Post") {
-        DetailPostSectionView(item: item)
-      }
-
-      Section("Comments") {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 16) {
+        DetailHeaderSectionView(item: currentPost)
+        DetailPostSectionView(item: currentPost)
         DetailCommentsSectionView()
       }
+      .padding(.horizontal)
+      .padding(.vertical, 12)
     }
-    .listStyle(.plain)
-    .navigationTitle("Comments")
+    #if os(iOS)
+      .refreshable {
+        await viewModel.reloadCurrentPostAndComments(fallbackPost: item)
+      }
+    #endif
     .toolbar {
+      if let shareURL {
+        ToolbarItem(placement: .primaryAction) {
+          Menu {
+            ShareLink(item: shareURL) {
+              Label("Share post", systemImage: "square.and.arrow.up")
+            }
+
+            Button {
+              openURL(shareURL)
+            } label: {
+              Label("Open in Safari", systemImage: "safari")
+            }
+          } label: {
+            Label("Share", systemImage: "square.and.arrow.up")
+          }
+          .accessibilityLabel("Share and open options")
+        }
+      }
+
+      ToolbarItem(placement: .primaryAction) {
+        Button {
+          reloadPostAndComments()
+        } label: {
+          Label("Reload post and comments", systemImage: "arrow.clockwise")
+        }
+        .accessibilityLabel("Reload post and comments")
+      }
+
       SortToolbarContent(
         title: "Comments",
         options: CommentSort.allCases,
@@ -67,6 +91,13 @@ struct DetailColumnView: View {
         await Task.yield()
         await viewModel.load(refresh: true)
       }
+    }
+  }
+
+  private func reloadPostAndComments() {
+    Task { @MainActor in
+      await Task.yield()
+      await viewModel.reloadCurrentPostAndComments(fallbackPost: item)
     }
   }
 }

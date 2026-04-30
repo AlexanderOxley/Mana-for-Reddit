@@ -58,6 +58,21 @@ final class SidebarColumnViewModel: ObservableObject {
     }
   }
 
+  func reload() {
+    let currentSelectionID = selectedItem?.id
+
+    loadRecentSubreddits()
+    rebuildItems()
+
+    if let currentSelectionID,
+      let refreshedSelection = items.first(where: { $0.id == currentSelectionID })
+    {
+      selectedItem = refreshedSelection
+    } else {
+      selectedItem = .frontPage
+    }
+  }
+
   private func rebuildItems() {
     items = [Source.frontPage] + recentSubreddits
   }
