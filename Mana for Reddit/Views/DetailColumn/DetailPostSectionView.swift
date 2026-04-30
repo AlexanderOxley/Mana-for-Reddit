@@ -24,21 +24,11 @@ struct DetailPostSectionView: View {
       case .thirdParty(let embed):
         ThirdPartyEmbedContainerView(embed: embed)
       case .externalLink(let externalURL):
-        Text("External content")
-          .foregroundStyle(.secondary)
-        DetailColumnInAppBrowserView(url: externalURL)
-          .frame(minHeight: 360)
-
-        Text(externalURL.host() ?? externalURL.absoluteString)
-          .font(.caption)
-          .foregroundStyle(.secondary)
+        DetailExternalLinkButton(externalURL: externalURL)
       case .none:
         Text("No post body available.")
           .foregroundStyle(.secondary)
       }
-
-      PostBadgesView(post: item)
-      PostSupplementaryMetadataView(post: item)
     }
   }
 }
