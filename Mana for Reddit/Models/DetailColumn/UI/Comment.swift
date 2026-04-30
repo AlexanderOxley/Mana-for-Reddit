@@ -52,53 +52,26 @@ struct Comment: Identifiable, Decodable {
     return Self.relativeFormatter.localizedString(for: editedDate, relativeTo: Date())
   }
 
+  // Transitional accessors for existing call sites.
+  var content: CommentContent {
+    CommentContentParser.parse(body: body)
+  }
+
   var previewImageURL: URL? {
-    guard let url = firstDetectedURL else { return nil }
-    guard let host = url.host?.lowercased(), host.hasSuffix("preview.redd.it") else { return nil }
-    return url
+    content.previewImageURL
   }
 
-  var giphyGIFURL: URL? {
-    guard let url = firstDetectedURL else { return nil }
-    guard let host = url.host?.lowercased() else { return nil }
-
-    if (host.contains("i.giphy.com") || host.contains("media.giphy.com"))
-      && url.path.lowercased().hasSuffix(".gif")
-    {
-      return url
-    }
-
-    guard host.hasSuffix("giphy.com") else { return nil }
-
-    let components = url.path.split(separator: "/")
-    if let mediaIndex = components.firstIndex(of: "media"), components.count > mediaIndex + 1 {
-      let id = String(components[mediaIndex + 1])
-      return URL(string: "https://i.giphy.com/\(id).gif")
-    }
-
-    if let last = components.last {
-      let value = String(last)
-      if let id = value.split(separator: "-").last, !id.isEmpty {
-        return URL(string: "https://i.giphy.com/\(id).gif")
-      }
-    }
-
-    return nil
+  var commentGIFURL: URL? {
+    content.gifURL
   }
 
-  private var firstDetectedURL: URL? {
-    let range = NSRange(body.startIndex..<body.endIndex, in: body)
-    guard let match = Self.urlDetector.firstMatch(in: body, options: [], range: range) else {
-      return nil
-    }
-    guard let urlRange = Range(match.range, in: body) else { return nil }
-    return URL(string: String(body[urlRange]))
+  var hasMediaOnlyBodyToken: Bool {
+    content.hasMediaOnlyBodyToken
   }
 
-  private static let urlDetector: NSDataDetector = {
-    // Safe to force-try with a fixed, framework-provided checking type.
-    try! NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-  }()
+  var displayBodyMarkdown: String? {
+    content.displayBodyMarkdown
+  }
 
   // This init is for previews/tests when constructing comments manually.
   init(

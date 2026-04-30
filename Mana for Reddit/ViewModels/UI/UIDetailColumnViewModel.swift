@@ -23,7 +23,7 @@ final class DetailColumnViewModel: ObservableObject {
   @Published var hasMore = true
 
   private var transport = CommentTransportViewModel()
-  private var loadTask: Task<[Comment], Error>?
+  private var loadTask: Task<(comments: [Comment], after: String?), Error>?
   private var loadTaskID: UUID?
 
   var visibleComments: [Comment] {
@@ -78,6 +78,7 @@ final class DetailColumnViewModel: ObservableObject {
     if refresh {
       cancelLoad()
       reset()
+      await transport.reset()
     }
 
     let isInitialLoad = comments.isEmpty
@@ -115,7 +116,8 @@ final class DetailColumnViewModel: ObservableObject {
       }
       self.loadTask = loadTask
 
-      let fetched = try await loadTask.value
+      let fetchedBatch = try await loadTask.value
+      let fetched = fetchedBatch.comments
       guard !Task.isCancelled else { return }
 
       if isInitialLoad {
@@ -126,7 +128,7 @@ final class DetailColumnViewModel: ObservableObject {
       }
 
       ensureValidSelection()
-      hasMore = transport.after != nil
+      hasMore = fetchedBatch.after != nil
       errorMessage = nil
     } catch is CancellationError {
       return
@@ -179,7 +181,7 @@ final class DetailColumnViewModel: ObservableObject {
       }
 
       comments = refreshedThread.comments
-      hasMore = transport.after != nil
+      hasMore = refreshedThread.after != nil
       errorMessage = nil
       ensureValidSelection()
     } catch is CancellationError {
@@ -210,7 +212,6 @@ final class DetailColumnViewModel: ObservableObject {
   }
 
   private func reset() {
-    transport.reset()
     comments = []
     selectedCommentID = nil
     collapsedCommentIDs = []

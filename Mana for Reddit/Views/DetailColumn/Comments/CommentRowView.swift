@@ -29,6 +29,8 @@ struct CommentRowView: View {
   }
 
   var body: some View {
+    let content = comment.content
+
     VStack(alignment: .leading, spacing: 4) {
       HStack {
         Button(action: onToggleCollapse) {
@@ -85,13 +87,15 @@ struct CommentRowView: View {
         }
       }
       if !isCollapsed {
-        MarkdownTextView(markdown: comment.body, font: .body)
+        if let bodyMarkdown = content.displayBodyMarkdown {
+          MarkdownTextView(markdown: bodyMarkdown, font: .body, parsingMode: .full)
+        }
 
-        if let previewImageURL = comment.previewImageURL {
+        if let previewImageURL = content.previewImageURL {
           DetailPostImageView(imageURL: previewImageURL)
             .frame(minHeight: 180)
-        } else if let giphyGIFURL = comment.giphyGIFURL {
-          CommentGIFView(gifURL: giphyGIFURL)
+        } else if let commentGIFURL = content.gifURL {
+          CommentGIFView(gifURL: commentGIFURL)
         }
       }
     }

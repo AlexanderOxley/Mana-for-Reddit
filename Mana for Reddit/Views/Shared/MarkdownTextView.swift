@@ -7,10 +7,16 @@
 
 import SwiftUI
 
+enum MarkdownParsingMode {
+  case inline
+  case full
+}
+
 struct MarkdownTextView: View {
   let markdown: String
   var font: Font = .body
   var lineLimit: Int? = nil
+  var parsingMode: MarkdownParsingMode = .inline
 
   var body: some View {
     Text(parsedText)
@@ -32,7 +38,7 @@ struct MarkdownTextView: View {
     if let parsed = try? AttributedString(
       markdown: value,
       options: AttributedString.MarkdownParsingOptions(
-        interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        interpretedSyntax: parsingMode == .full ? .full : .inlineOnlyPreservingWhitespace)
     ) {
       return parsed
     }

@@ -12,6 +12,7 @@ struct DetailCommentsSectionView: View {
 
   var body: some View {
     let visibleComments = viewModel.visibleComments
+    let lastVisibleCommentID = visibleComments.last?.id
 
     VStack(alignment: .leading, spacing: 12) {
 
@@ -35,7 +36,7 @@ struct DetailCommentsSectionView: View {
           )
           .id("\(comment.id)-\(viewModel.isCollapsed(comment.id))")
           .onAppear {
-            if comment.id == viewModel.visibleComments.last?.id {
+            if comment.id == lastVisibleCommentID {
               Task { @MainActor in
                 await Task.yield()
                 await viewModel.load()
@@ -81,8 +82,7 @@ struct DetailCommentsSectionView: View {
     return vm
   }()
 
-    
-    DetailCommentsSectionView()
+  DetailCommentsSectionView()
 
-  .environmentObject(vm)
+    .environmentObject(vm)
 }

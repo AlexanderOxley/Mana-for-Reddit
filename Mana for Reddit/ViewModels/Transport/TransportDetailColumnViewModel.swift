@@ -7,8 +7,7 @@
 
 import Foundation
 
-@MainActor
-final class CommentTransportViewModel {
+actor CommentTransportViewModel {
   private(set) var after: String?
 
   func reset() {
@@ -19,7 +18,7 @@ final class CommentTransportViewModel {
     permalink: String,
     sort: CommentSort,
     timeRange: TimeRange
-  ) async throws -> [Comment] {
+  ) async throws -> (comments: [Comment], after: String?) {
     let result = try await TransportServices.fetchComments(
       permalink: permalink,
       sort: sort,
@@ -27,14 +26,14 @@ final class CommentTransportViewModel {
       after: after
     )
     after = result.after
-    return flattenComments(result.comments)
+    return (flattenComments(result.comments), result.after)
   }
 
   func refreshThread(
     permalink: String,
     sort: CommentSort,
     timeRange: TimeRange
-  ) async throws -> (post: Post?, comments: [Comment]) {
+  ) async throws -> (post: Post?, comments: [Comment], after: String?) {
     reset()
 
     let result = try await TransportServices.fetchPostAndComments(
@@ -45,7 +44,7 @@ final class CommentTransportViewModel {
     )
 
     after = result.after
-    return (result.post, flattenComments(result.comments))
+    return (result.post, flattenComments(result.comments), result.after)
   }
 
   private func flattenComments(_ roots: [Comment]) -> [Comment] {
